@@ -329,6 +329,7 @@ public class HandController : MonoBehaviour
                 // If the width is more than 0, set slider value to be the ratio of the raycast x-coordinate over the width of the slider (clamped to between 0.0f and 1.0f)
                 // Otherwise, set value to 0.0f (to avoid division by 0)
                 activeSlider.value = (sliderWidth > 0) ? (Mathf.Clamp(((activeSlider.transform.InverseTransformPoint(hit.point).x + sliderRect.anchoredPosition.x) / sliderWidth), 0.0f, 1.0f)) : 0.0f;
+
             }
             holdingSlider = true;
         }

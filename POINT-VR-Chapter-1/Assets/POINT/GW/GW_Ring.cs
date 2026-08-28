@@ -1,4 +1,4 @@
-﻿using System.Collections;
+using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 
@@ -38,6 +38,7 @@ public class GW_Ring : MonoBehaviour
 
         //sphere_array = new GameObject[numberOfMeshes];
 
+        
         gw_gravity = GetComponent<GW_GravityScript>();
         
         //Initialize mesh and angles array, to create our coordinate system which we use to translate particles

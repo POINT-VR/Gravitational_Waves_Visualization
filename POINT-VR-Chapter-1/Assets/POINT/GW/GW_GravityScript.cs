@@ -1,4 +1,4 @@
-﻿using System.Collections;
+using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 
@@ -7,12 +7,51 @@ public class GW_GravityScript : MonoBehaviour
 
     [SerializeField] private float amplitude;
     [SerializeField] private float speed;
+    [SerializeField] private UnityEngine.UI.Slider testSlider;
+
+    
 
     // Start is called before the first frame update
     void Start()
     {
+        Debug.Log("Start() ran on: " + gameObject.name);
+
+        if (testSlider != null)
+        {
+            testSlider.onValueChanged.AddListener(AdjustAngle1);
+            Debug.Log("Persistent listener count: " + testSlider.onValueChanged.GetPersistentEventCount());
+            Debug.Log("Listener added in Start.");
+        }
+        else
+        {
+            Debug.Log("testSlider is NULL on: " + gameObject.name);
+        }
         
     }
+    
+    
+    public static float angle1 = 0;
+    public static float angle2 = 0;
+    public static float angle3 = 0;
+
+    
+    public void TestSlider(float x)
+    {
+        Debug.Log("Slider fired: " + x);
+    }
+    
+
+    
+    public void AdjustAngle1(float newTheta)
+    {
+        
+        angle1 = newTheta * (Mathf.PI/180);
+        Debug.Log("I am being called.");
+
+    }
+    
+    
+    
 
     // Update is called once per frame
     void Update()
@@ -21,6 +60,9 @@ public class GW_GravityScript : MonoBehaviour
         {
             speed = speed * 100;
         }
+
+        if (testSlider != null)
+            Debug.Log("Slider value: " + testSlider.value);
     }
 
     /** public Vector3 CalculateOscillations(Vector3 pos, Vector3 center, float angle, float phase = 0.0f, float ampIndex = 0.0f, 
@@ -44,7 +86,98 @@ public class GW_GravityScript : MonoBehaviour
         float PercentOfLongitudinalMode = 0.0f,
         float PercentOfXMode = 0.0f, float PercentOfYMode = 0.0f)
     {
+        //Modified code for source coming from arbitrary direction in comparison to affected object.
+
+        //How do users determine what the direction of the source is? For now I am going to check with test cases for theta, phi, and psi by fixing them in the code.
         
+        float theta = angle1;
+        float phi = angle2;
+        float psi = angle3;
+
+        Vector3 output;
+        output.x = vertex.x
+            + PercentOfPlusMode / 100.0f * vertex.x * amplitude * (-Mathf.Pow(Mathf.Cos(psi) * Mathf.Sin(phi) + Mathf.Cos(theta) * Mathf.Cos(phi) * Mathf.Sin(psi),2) + Mathf.Pow(Mathf.Cos(theta) * Mathf.Cos(phi) * Mathf.Cos(psi) - Mathf.Sin(phi) * Mathf.Sin(psi),2)) * Mathf.Cos(Time.time * speed * Mathf.Deg2Rad + phase)
+            + PercentOfPlusMode / 100.0f * vertex.y * amplitude * (0.25f * (3 + Mathf.Cos(2 * theta)) * Mathf.Cos(2f * psi) * Mathf.Sin(2f * phi) + Mathf.Cos(theta) * Mathf.Cos(2f * phi) * Mathf.Sin(2 * psi)) * Mathf.Cos(Time.time * speed * Mathf.Deg2Rad + phase)
+            + PercentOfPlusMode / 100.0f * vertex.z * amplitude * Mathf.Sin(theta) * (- Mathf.Cos(theta) * Mathf.Cos(phi) * Mathf.Cos(2 * psi) + Mathf.Sin(phi) * Mathf.Sin(2 * psi)) * Mathf.Cos(Time.time * speed * Mathf.Deg2Rad + phase)
+
+            + PercentOfCrossMode / 100.0f * vertex.x * amplitude * (-2f * (Mathf.Cos(psi) * Mathf.Sin(phi) + Mathf.Cos(theta) * Mathf.Cos(phi) * Mathf.Sin(psi)) * (Mathf.Cos(theta) * Mathf.Cos(phi) * Mathf.Cos(psi) - Mathf.Sin(phi) * Mathf.Sin(psi))) * Mathf.Sin(Time.time * speed * Mathf.Deg2Rad + phase)
+            + PercentOfCrossMode / 100.0f * vertex.y * amplitude * (Mathf.Cos(theta) * Mathf.Cos(2 * phi) * Mathf.Cos(2 * psi) - 2f * Mathf.Cos(phi) * Mathf.Cos(psi) * Mathf.Sin(phi) * Mathf.Sin(psi) - 2f * Mathf.Pow(Mathf.Cos(theta),2) * Mathf.Cos(phi) * Mathf.Cos(psi) * Mathf.Sin(phi) * Mathf.Sin(psi)) * Mathf.Sin(Time.time * speed * Mathf.Deg2Rad + phase)
+            + PercentOfCrossMode / 100.0f * vertex.z * amplitude * (Mathf.Sin(theta) * (Mathf.Pow(Mathf.Cos(psi),2) * Mathf.Sin(phi) - Mathf.Sin(phi) * Mathf.Pow((Mathf.Sin(psi)),2) + Mathf.Cos(theta) * Mathf.Cos(phi) * Mathf.Sin(2 * psi))) * Mathf.Sin(Time.time * speed * Mathf.Deg2Rad + phase)
+
+            + PercentOfXMode / 100.0f * vertex.x * amplitude * (2f * Mathf.Cos(phi) * Mathf.Sin(theta) * (Mathf.Cos(theta) * Mathf.Cos(phi) * Mathf.Cos(psi) - Mathf.Sin(phi) * Mathf.Sin(psi))) * Mathf.Cos(Time.time * speed * Mathf.Deg2Rad + phase)
+            + PercentOfXMode / 100.0f * vertex.y * amplitude * (Mathf.Sin(theta) * (Mathf.Cos(theta) * Mathf.Cos(psi) * Mathf.Sin(2 * phi) + Mathf.Cos(2 * phi) * Mathf.Sin(psi))) * Mathf.Cos(Time.time * speed * Mathf.Deg2Rad + phase)
+            + PercentOfXMode / 100.0f * vertex.z * amplitude * (Mathf.Pow(Mathf.Cos(theta),2) * Mathf.Cos(phi) * Mathf.Cos(psi) - Mathf.Cos(phi) * Mathf.Cos(psi) * Mathf.Pow(Mathf.Sin(theta),2) - Mathf.Cos(theta) * Mathf.Sin(phi) * Mathf.Sin(psi)) * Mathf.Cos(Time.time * speed * Mathf.Deg2Rad + phase)
+
+            + PercentOfYMode / 100.0f * vertex.x * amplitude * (- 2f * Mathf.Cos(phi) * Mathf.Sin(theta) * (Mathf.Cos(psi) * Mathf.Sin(phi) + Mathf.Cos(theta) * Mathf.Cos(phi) * Mathf.Sin(psi))) * Mathf.Cos(Time.time * speed * Mathf.Deg2Rad + phase)
+            + PercentOfYMode / 100.0f * vertex.y * amplitude * (Mathf.Sin(theta) * (Mathf.Pow(Mathf.Cos(phi),2) * Mathf.Cos(psi) - Mathf.Cos(psi) * Mathf.Pow(Mathf.Sin(phi),2) - 2f * Mathf.Cos(theta) * Mathf.Cos(phi) * Mathf.Sin(phi) * Mathf.Sin(psi))) * Mathf.Cos(Time.time * speed * Mathf.Deg2Rad + phase)
+            + PercentOfYMode / 100.0f * vertex.z * amplitude * (- Mathf.Cos(theta) * Mathf.Cos(psi) * Mathf.Sin(phi) - Mathf.Pow(Mathf.Cos(theta),2) * Mathf.Cos(phi) * Mathf.Sin(psi) + Mathf.Cos(phi) * Mathf.Pow(Mathf.Sin(theta),2) * Mathf.Sin(psi)) * Mathf.Cos(Time.time * speed * Mathf.Deg2Rad + phase)
+
+            + PercentOfBreathingMode / 100.0f * vertex.x * amplitude * (Mathf.Pow(Mathf.Cos(theta),2) * Mathf.Pow(Mathf.Cos(phi),2) + Mathf.Pow(Mathf.Sin(phi),2)) * Mathf.Cos(Time.time * speed * Mathf.Deg2Rad + phase)
+            + PercentOfBreathingMode / 100.0f * vertex.y * amplitude * (- Mathf.Cos(phi) * Mathf.Pow(Mathf.Sin(theta),2) * Mathf.Sin(phi)) * Mathf.Cos(Time.time * speed * Mathf.Deg2Rad + phase)
+            + PercentOfBreathingMode / 100.0f * vertex.z * amplitude * (- Mathf.Cos(theta) * Mathf.Cos(phi) * Mathf.Sin(theta)) * Mathf.Cos(Time.time * speed * Mathf.Deg2Rad + phase)
+
+            + PercentOfLongitudinalMode / 100.0f * vertex.x * amplitude * (Mathf.Pow(Mathf.Cos(phi),2) * Mathf.Pow(Mathf.Sin(theta),2)) * Mathf.Cos(Time.time * speed * Mathf.Deg2Rad + phase)
+            + PercentOfLongitudinalMode / 100.0f * vertex.y * amplitude * (Mathf.Cos(phi) * Mathf.Pow(Mathf.Sin(theta),2) * Mathf.Sin(phi)) * Mathf.Cos(Time.time * speed * Mathf.Deg2Rad + phase)
+            + PercentOfLongitudinalMode / 100.0f * vertex.z * amplitude * (Mathf.Cos(theta) * Mathf.Cos(phi) * Mathf.Sin(theta)) * Mathf.Cos(Time.time * speed * Mathf.Deg2Rad + phase);
+
+
+        output.y = vertex.y
+            + PercentOfPlusMode / 100.0f * vertex.x * amplitude * (0.25f * (3f + Mathf.Cos(2 * theta)) * Mathf.Cos(2 * psi) * Mathf.Sin(2 * phi) + Mathf.Cos(theta) * Mathf.Cos(2 * phi) * Mathf.Sin(2 * psi)) * Mathf.Cos(Time.time * speed * Mathf.Deg2Rad + phase)
+            + PercentOfPlusMode / 100.0f * vertex.y * amplitude * (- Mathf.Pow(Mathf.Cos(phi),2) * Mathf.Cos(2 * psi) + Mathf.Cos(theta) * (Mathf.Cos(theta) * Mathf.Cos(2 * psi) * Mathf.Pow(Mathf.Sin(phi),2) + Mathf.Sin(2 * phi) * Mathf.Sin(2 * psi))) * Mathf.Cos(Time.time * speed * Mathf.Deg2Rad + phase)
+            + PercentOfPlusMode / 100.0f * vertex.z * amplitude * (- Mathf.Sin(theta) * (Mathf.Cos(theta) * Mathf.Cos(2 * psi) * Mathf.Sin(phi) + Mathf.Cos(phi) * Mathf.Sin(2 * psi))) * Mathf.Cos(Time.time * speed * Mathf.Deg2Rad + phase)
+
+            + PercentOfCrossMode / 100.0f * vertex.x * amplitude * (Mathf.Cos(theta) * Mathf.Cos(2 * phi) * Mathf.Cos(2 * psi) - 2f * Mathf.Cos(phi) * Mathf.Cos(psi) * Mathf.Sin(phi) * Mathf.Sin(psi) - 2f * Mathf.Pow(Mathf.Cos(theta),2) * Mathf.Cos(phi) * Mathf.Cos(psi) * Mathf.Sin(phi) * Mathf.Sin(psi)) * Mathf.Sin(Time.time * speed * Mathf.Deg2Rad + phase)
+            + PercentOfCrossMode / 100.0f * vertex.y * amplitude * (2f * (Mathf.Cos(theta) * Mathf.Cos(psi) * Mathf.Sin(phi) + Mathf.Cos(phi) * Mathf.Sin(psi)) * (Mathf.Cos(phi) * Mathf.Cos(psi) - Mathf.Cos(theta) * Mathf.Sin(phi) * Mathf.Sin(psi))) * Mathf.Sin(Time.time * speed * Mathf.Deg2Rad + phase)
+            + PercentOfCrossMode / 100.0f * vertex.z * amplitude * (Mathf.Sin(theta) * (- Mathf.Cos(phi) * Mathf.Cos(2 * psi) + Mathf.Cos(theta) * Mathf.Sin(phi) * Mathf.Sin(2 * psi))) * Mathf.Sin(Time.time * speed * Mathf.Deg2Rad + phase)
+
+            + PercentOfXMode / 100.0f * vertex.x * amplitude * (Mathf.Sin(theta) * (Mathf.Cos(theta) * Mathf.Cos(psi) * Mathf.Sin(2 * phi) + Mathf.Cos(2 * phi) * Mathf.Sin(psi))) * Mathf.Cos(Time.time * speed * Mathf.Deg2Rad + phase)
+            + PercentOfXMode / 100.0f * vertex.y * amplitude * (2f * Mathf.Sin(theta) * Mathf.Sin(phi) * (Mathf.Cos(theta) * Mathf.Cos(psi) * Mathf.Sin(phi) + Mathf.Cos(phi) * Mathf.Sin(psi))) * Mathf.Cos(Time.time * speed * Mathf.Deg2Rad + phase)
+            + PercentOfXMode / 100.0f * vertex.z * amplitude * (Mathf.Pow(Mathf.Cos(theta),2) * Mathf.Cos(psi) * Mathf.Sin(phi) - Mathf.Cos(psi) * Mathf.Pow(Mathf.Sin(theta),2) * Mathf.Sin(phi) + Mathf.Cos(theta) * Mathf.Cos(phi) * Mathf.Sin(psi)) * Mathf.Cos(Time.time * speed * Mathf.Deg2Rad + phase)
+
+            + PercentOfYMode / 100.0f * vertex.x * amplitude * (Mathf.Sin(theta) * (Mathf.Pow(Mathf.Cos(phi),2) * Mathf.Cos(psi) - Mathf.Cos(psi) * Mathf.Pow(Mathf.Sin(phi),2) - 2f * Mathf.Cos(theta) * Mathf.Cos(phi) * Mathf.Sin(phi) * Mathf.Sin(psi))) * Mathf.Cos(Time.time * speed * Mathf.Deg2Rad + phase)
+            + PercentOfYMode / 100.0f * vertex.y * amplitude * (2f * Mathf.Sin(theta) * Mathf.Sin(phi) * (Mathf.Cos(phi) * Mathf.Cos(psi) - Mathf.Cos(theta) * Mathf.Sin(phi) * Mathf.Sin(psi))) * Mathf.Cos(Time.time * speed * Mathf.Deg2Rad + phase)
+            + PercentOfYMode / 100.0f * vertex.z * amplitude * (Mathf.Cos(theta) * Mathf.Cos(phi) * Mathf.Cos(psi) - Mathf.Pow(Mathf.Cos(theta),2) * Mathf.Sin(phi) * Mathf.Sin(psi) + Mathf.Pow(Mathf.Sin(theta),2) * Mathf.Sin(phi) * Mathf.Sin(psi)) * Mathf.Cos(Time.time * speed * Mathf.Deg2Rad + phase)
+
+            + PercentOfBreathingMode / 100.0f * vertex.x * amplitude * (- Mathf.Cos(phi) * Mathf.Pow(Mathf.Sin(theta),2) * Mathf.Sin(phi)) * Mathf.Cos(Time.time * speed * Mathf.Deg2Rad + phase)
+            + PercentOfBreathingMode / 100.0f * vertex.y * amplitude * (Mathf.Pow(Mathf.Cos(phi),2) + Mathf.Pow(Mathf.Cos(theta),2) * Mathf.Pow(Mathf.Sin(phi),2)) * Mathf.Cos(Time.time * speed * Mathf.Deg2Rad + phase)
+            + PercentOfBreathingMode / 100.0f * vertex.z * amplitude * (- Mathf.Cos(theta) * Mathf.Sin(theta) * Mathf.Sin(phi)) * Mathf.Cos(Time.time * speed * Mathf.Deg2Rad + phase)
+
+            + PercentOfLongitudinalMode / 100.0f * vertex.x * amplitude * (Mathf.Cos(phi) * Mathf.Pow(Mathf.Sin(theta),2) * Mathf.Sin(phi)) * Mathf.Cos(Time.time * speed * Mathf.Deg2Rad + phase)
+            + PercentOfLongitudinalMode / 100.0f * vertex.y * amplitude * (Mathf.Pow(Mathf.Sin(theta),2) * Mathf.Pow(Mathf.Sin(phi),2)) * Mathf.Cos(Time.time * speed * Mathf.Deg2Rad + phase)
+            + PercentOfLongitudinalMode / 100.0f * vertex.z * amplitude * (Mathf.Cos(theta) * Mathf.Sin(theta) * Mathf.Sin(phi)) * Mathf.Cos(Time.time * speed * Mathf.Deg2Rad + phase);
+
+
+        output.z = vertex.z
+            + PercentOfPlusMode / 100.0f * vertex.x * amplitude * Mathf.Sin(theta) * (- Mathf.Cos(theta) * Mathf.Cos(phi) * Mathf.Cos(2 * psi) + Mathf.Sin(phi) * Mathf.Sin(2 * psi)) * Mathf.Cos(Time.time * speed * Mathf.Deg2Rad + phase)
+            + PercentOfPlusMode / 100.0f * vertex.y * amplitude * (- Mathf.Sin(theta) * (Mathf.Cos(theta) * Mathf.Cos(2 * psi) * Mathf.Sin(phi) + Mathf.Cos(phi) * Mathf.Sin(2 * psi))) * Mathf.Cos(Time.time * speed * Mathf.Deg2Rad + phase)
+            + PercentOfPlusMode / 100.0f * vertex.z * amplitude * (Mathf.Cos(2 * psi) * Mathf.Pow(Mathf.Sin(theta),2)) * Mathf.Cos(Time.time * speed * Mathf.Deg2Rad + phase) 
+
+            + PercentOfCrossMode / 100.0f * vertex.x * amplitude * (Mathf.Sin(theta) * (Mathf.Pow(Mathf.Cos(psi),2) * Mathf.Sin(phi) - Mathf.Sin(phi) * Mathf.Pow(Mathf.Sin(psi),2) + Mathf.Cos(theta) * Mathf.Cos(phi) * Mathf.Sin(2 * psi))) * Mathf.Sin(Time.time * speed * Mathf.Deg2Rad + phase)
+            + PercentOfCrossMode / 100.0f * vertex.y * amplitude * (Mathf.Sin(theta) * (- Mathf.Cos(phi) * Mathf.Cos(2 * psi) + Mathf.Cos(theta) * Mathf.Sin(phi) * Mathf.Sin(2 * psi))) * Mathf.Sin(Time.time * speed * Mathf.Deg2Rad + phase)
+            + PercentOfCrossMode / 100.0f * vertex.z * amplitude * (- 2f * Mathf.Cos(psi) * Mathf.Pow(Mathf.Sin(theta),2) * Mathf.Sin(psi)) * Mathf.Sin(Time.time * speed * Mathf.Deg2Rad + phase)
+
+            + PercentOfXMode / 100.0f * vertex.x * amplitude * (Mathf.Pow(Mathf.Cos(theta),2) * Mathf.Cos(phi) * Mathf.Cos(psi) - Mathf.Cos(phi) * Mathf.Cos(psi) * Mathf.Pow(Mathf.Sin(theta),2) - Mathf.Cos(theta) * Mathf.Sin(phi) * Mathf.Sin(psi)) * Mathf.Cos(Time.time * speed * Mathf.Deg2Rad + phase)
+            + PercentOfXMode / 100.0f * vertex.y * amplitude * (Mathf.Pow(Mathf.Cos(theta),2) * Mathf.Cos(psi) * Mathf.Sin(phi) - Mathf.Cos(psi) * Mathf.Pow(Mathf.Sin(theta),2) * Mathf.Sin(phi) + Mathf.Cos(theta) * Mathf.Cos(phi) * Mathf.Sin(psi)) * Mathf.Cos(Time.time * speed * Mathf.Deg2Rad + phase)
+            + PercentOfXMode / 100.0f * vertex.z * amplitude * (- 2f * Mathf.Cos(theta) * Mathf.Cos(psi) * Mathf.Sin(theta)) * Mathf.Cos(Time.time * speed * Mathf.Deg2Rad + phase)
+
+            + PercentOfYMode / 100.0f * vertex.x * amplitude * (- Mathf.Cos(theta) * Mathf.Cos(psi) * Mathf.Sin(phi) - Mathf.Pow(Mathf.Cos(theta),2) * Mathf.Cos(phi) * Mathf.Sin(psi) + Mathf.Cos(phi) * Mathf.Pow(Mathf.Sin(theta),2) * Mathf.Sin(psi)) * Mathf.Cos(Time.time * speed * Mathf.Deg2Rad + phase)
+            + PercentOfYMode / 100.0f * vertex.y * amplitude * (Mathf.Cos(theta) * Mathf.Cos(phi) * Mathf.Cos(psi) - Mathf.Pow(Mathf.Cos(theta),2) * Mathf.Sin(phi) * Mathf.Sin(psi) + Mathf.Pow(Mathf.Sin(theta),2) * Mathf.Sin(phi) * Mathf.Sin(psi)) * Mathf.Cos(Time.time * speed * Mathf.Deg2Rad + phase)
+            + PercentOfYMode / 100.0f * vertex.z * amplitude * (Mathf.Sin(2*theta)*Mathf.Sin(psi)) * Mathf.Cos(Time.time * speed * Mathf.Deg2Rad + phase)
+
+            + PercentOfBreathingMode / 100.0f * vertex.x * amplitude * (- Mathf.Cos(theta) * Mathf.Cos(phi) * Mathf.Sin(theta)) * Mathf.Cos(Time.time * speed * Mathf.Deg2Rad + phase)
+            + PercentOfBreathingMode / 100.0f * vertex.y * amplitude * (- Mathf.Cos(theta) * Mathf.Sin(theta) * Mathf.Sin(phi)) * Mathf.Cos(Time.time * speed * Mathf.Deg2Rad + phase)
+            + PercentOfBreathingMode / 100.0f * vertex.z * amplitude * Mathf.Pow(Mathf.Sin(theta),2) * Mathf.Cos(Time.time * speed * Mathf.Deg2Rad + phase)
+
+            + PercentOfLongitudinalMode / 100.0f * vertex.x * amplitude * (Mathf.Cos(theta) * Mathf.Cos(phi) * Mathf.Sin(theta)) * Mathf.Cos(Time.time * speed * Mathf.Deg2Rad + phase)
+            + PercentOfLongitudinalMode / 100.0f * vertex.y * amplitude * (Mathf.Cos(theta) * Mathf.Sin(theta) * Mathf.Sin(phi)) * Mathf.Cos(Time.time * speed * Mathf.Deg2Rad + phase)
+            + PercentOfLongitudinalMode / 100.0f * vertex.z * amplitude * Mathf.Pow(Mathf.Cos(theta),2) * Mathf.Cos(Time.time * speed * Mathf.Deg2Rad + phase);
+
+        return output;
+        
+
+
+
+        /**
         Vector3 output;
         output.x = vertex.x
             + PercentOfPlusMode / 100.0f * vertex.x * amplitude * Mathf.Cos(Time.time * speed * Mathf.Deg2Rad + phase)
@@ -66,6 +199,7 @@ public class GW_GravityScript : MonoBehaviour
             + PercentOfYMode / 100.0f * vertex.y * amplitude * Mathf.Cos(Time.time * speed * Mathf.Deg2Rad + phase);
 
         return output;
+        **/
 
     }
 
@@ -82,9 +216,105 @@ public class GW_GravityScript : MonoBehaviour
         float PercentOfLongitudinalMode = 0.0f,
         float PercentOfXMode = 0.0f, float PercentOfYMode = 0.0f)
     {
+        
+        //Modified code for source coming from arbitrary direction in comparison to affected object.
+
+        //How do users determine what the direction of the source is? For now I am going to check with test cases for theta, phi, and psi by fixing them in the code.
+
+        Vector3 unitVector = (pos - center).normalized;
+
+        Vector3 output;
+
+        float theta = angle1;
+        float phi = angle2;
+        float psi = angle3;
+
+        output.x = pos.x
+            + PercentOfPlusMode / 100.0f * unitVector.x * amplitude * (-Mathf.Pow(Mathf.Cos(psi) * Mathf.Sin(phi) + Mathf.Cos(theta) * Mathf.Cos(phi) * Mathf.Sin(psi),2) + Mathf.Pow(Mathf.Cos(theta) * Mathf.Cos(phi) * Mathf.Cos(psi) - Mathf.Sin(phi) * Mathf.Sin(psi),2)) * Mathf.Cos(Time.time * speed * Mathf.Deg2Rad + phase)
+            + PercentOfPlusMode / 100.0f * unitVector.y * amplitude * (0.25f * (3f + Mathf.Cos(2 * theta)) * Mathf.Cos(2 * psi) * Mathf.Sin(2 * phi) + Mathf.Cos(theta) * Mathf.Cos(2 * phi) * Mathf.Sin(2 * psi)) * Mathf.Cos(Time.time * speed * Mathf.Deg2Rad + phase)
+            + PercentOfPlusMode / 100.0f * Vector3.forward.z * amplitude * Mathf.Sin(theta) * (- Mathf.Cos(theta) * Mathf.Cos(phi) * Mathf.Cos(2 * psi) + Mathf.Sin(phi) * Mathf.Sin(2 * psi)) * Mathf.Cos(Time.time * speed * Mathf.Deg2Rad + phase)
+
+            + PercentOfCrossMode / 100.0f * unitVector.x * amplitude * (-2f * (Mathf.Cos(psi) * Mathf.Sin(phi) + Mathf.Cos(theta) * Mathf.Cos(phi) * Mathf.Sin(psi)) * (Mathf.Cos(theta) * Mathf.Cos(phi) * Mathf.Cos(psi) - Mathf.Sin(phi) * Mathf.Sin(psi))) * Mathf.Sin(Time.time * speed * Mathf.Deg2Rad + phase)
+            + PercentOfCrossMode / 100.0f * unitVector.y * amplitude * (Mathf.Cos(theta) * Mathf.Cos(2 * phi) * Mathf.Cos(2 * psi) - 2f * Mathf.Cos(phi) * Mathf.Cos(psi) * Mathf.Sin(phi) * Mathf.Sin(psi) - 2f * Mathf.Pow(Mathf.Cos(theta),2) * Mathf.Cos(phi) * Mathf.Cos(psi) * Mathf.Sin(phi) * Mathf.Sin(psi)) * Mathf.Sin(Time.time * speed * Mathf.Deg2Rad + phase)
+            + PercentOfCrossMode / 100.0f * Vector3.forward.z * amplitude * (Mathf.Sin(theta) * (Mathf.Pow(Mathf.Cos(psi),2) * Mathf.Sin(phi) - Mathf.Sin(phi) * Mathf.Pow((Mathf.Sin(psi)),2) + Mathf.Cos(theta) * Mathf.Cos(phi) * Mathf.Sin(2 * psi))) * Mathf.Sin(Time.time * speed * Mathf.Deg2Rad + phase)
+
+            + PercentOfXMode / 100.0f * unitVector.x * amplitude * (2f * Mathf.Cos(phi) * Mathf.Sin(theta) * (Mathf.Cos(theta) * Mathf.Cos(phi) * Mathf.Cos(psi) - Mathf.Sin(phi) * Mathf.Sin(psi))) * Mathf.Cos(Time.time * speed * Mathf.Deg2Rad + phase)
+            + PercentOfXMode / 100.0f * unitVector.y * amplitude * (Mathf.Sin(theta) * (Mathf.Cos(theta) * Mathf.Cos(psi) * Mathf.Sin(2 * phi) + Mathf.Cos(2 * phi) * Mathf.Sin(psi))) * Mathf.Cos(Time.time * speed * Mathf.Deg2Rad + phase)
+            + PercentOfXMode / 100.0f * Vector3.forward.z * amplitude * (Mathf.Pow(Mathf.Cos(theta),2) * Mathf.Cos(phi) * Mathf.Cos(psi) - Mathf.Cos(phi) * Mathf.Cos(psi) * Mathf.Pow(Mathf.Sin(theta),2) - Mathf.Cos(theta) * Mathf.Sin(phi) * Mathf.Sin(psi)) * Mathf.Cos(Time.time * speed * Mathf.Deg2Rad + phase)
+
+            + PercentOfYMode / 100.0f * unitVector.x * amplitude * (- 2f * Mathf.Cos(phi) * Mathf.Sin(theta) * (Mathf.Cos(psi) * Mathf.Sin(phi) + Mathf.Cos(theta) * Mathf.Cos(phi) * Mathf.Sin(psi))) * Mathf.Cos(Time.time * speed * Mathf.Deg2Rad + phase)
+            + PercentOfYMode / 100.0f * unitVector.y * amplitude * (Mathf.Sin(theta) * (Mathf.Pow(Mathf.Cos(phi),2) * Mathf.Cos(psi) - Mathf.Cos(psi) * Mathf.Pow(Mathf.Sin(phi),2) - 2 * Mathf.Cos(theta) * Mathf.Cos(phi) * Mathf.Sin(phi) * Mathf.Sin(psi))) * Mathf.Cos(Time.time * speed * Mathf.Deg2Rad + phase)
+            + PercentOfYMode / 100.0f * Vector3.forward.z * amplitude * (- Mathf.Cos(theta) * Mathf.Cos(psi) * Mathf.Sin(phi) - Mathf.Pow(Mathf.Cos(theta),2) * Mathf.Cos(phi) * Mathf.Sin(psi) + Mathf.Cos(phi) * Mathf.Pow(Mathf.Sin(theta),2) * Mathf.Sin(psi)) * Mathf.Cos(Time.time * speed * Mathf.Deg2Rad + phase)
+
+            + PercentOfBreathingMode / 100.0f * unitVector.x * amplitude * (Mathf.Pow(Mathf.Cos(theta),2) * Mathf.Pow(Mathf.Cos(phi),2) + Mathf.Pow(Mathf.Sin(phi),2)) * Mathf.Cos(Time.time * speed * Mathf.Deg2Rad + phase)
+            + PercentOfBreathingMode / 100.0f * unitVector.y * amplitude * (- Mathf.Cos(phi) * Mathf.Pow(Mathf.Sin(theta),2) * Mathf.Sin(phi)) * Mathf.Cos(Time.time * speed * Mathf.Deg2Rad + phase)
+            + PercentOfBreathingMode / 100.0f * Vector3.forward.z * amplitude * (- Mathf.Cos(theta) * Mathf.Cos(phi) * Mathf.Sin(theta)) * Mathf.Cos(Time.time * speed * Mathf.Deg2Rad + phase)
+
+            + PercentOfLongitudinalMode / 100.0f * unitVector.x * amplitude * (Mathf.Pow(Mathf.Cos(phi),2) * Mathf.Pow(Mathf.Sin(theta),2)) * Mathf.Cos(Time.time * speed * Mathf.Deg2Rad + phase)
+            + PercentOfLongitudinalMode / 100.0f * unitVector.y * amplitude * (Mathf.Cos(phi) * Mathf.Pow(Mathf.Sin(theta),2) * Mathf.Sin(phi)) * Mathf.Cos(Time.time * speed * Mathf.Deg2Rad + phase)
+            + PercentOfLongitudinalMode / 100.0f * Vector3.forward.z * amplitude * (Mathf.Cos(theta) * Mathf.Cos(phi) * Mathf.Sin(theta)) * Mathf.Cos(Time.time * speed * Mathf.Deg2Rad + phase);
+
+
+        output.y = pos.y
+            + PercentOfPlusMode / 100.0f * unitVector.x * amplitude * (0.25f * (3 + Mathf.Cos(2 * theta)) * Mathf.Cos(2 * psi) * Mathf.Sin(2 * phi) + Mathf.Cos(theta) * Mathf.Cos(2 * phi) * Mathf.Sin(2 * psi)) * Mathf.Cos(Time.time * speed * Mathf.Deg2Rad + phase)
+            + PercentOfPlusMode / 100.0f * unitVector.y * amplitude * (- Mathf.Pow(Mathf.Cos(phi),2) * Mathf.Cos(2 * psi) + Mathf.Cos(theta) * (Mathf.Cos(theta) * Mathf.Cos(2 * psi) * Mathf.Pow(Mathf.Sin(phi),2) + Mathf.Sin(2 * phi) * Mathf.Sin(2 * psi))) * Mathf.Cos(Time.time * speed * Mathf.Deg2Rad + phase)
+            + PercentOfPlusMode / 100.0f * Vector3.forward.z * amplitude * (- Mathf.Sin(theta) * (Mathf.Cos(theta) * Mathf.Cos(2 * psi) * Mathf.Sin(phi) + Mathf.Cos(phi) * Mathf.Sin(2 * psi))) * Mathf.Cos(Time.time * speed * Mathf.Deg2Rad + phase)
+
+            + PercentOfCrossMode / 100.0f * unitVector.x * amplitude * (Mathf.Cos(theta) * Mathf.Cos(2 * phi) * Mathf.Cos(2 * psi) - 2 * Mathf.Cos(phi) * Mathf.Cos(psi) * Mathf.Sin(phi) * Mathf.Sin(psi) - 2f * Mathf.Pow(Mathf.Cos(theta),2) * Mathf.Cos(phi) * Mathf.Cos(psi) * Mathf.Sin(phi) * Mathf.Sin(psi)) * Mathf.Sin(Time.time * speed * Mathf.Deg2Rad + phase)
+            + PercentOfCrossMode / 100.0f * unitVector.y * amplitude * (2f * (Mathf.Cos(theta) * Mathf.Cos(psi) * Mathf.Sin(phi) + Mathf.Cos(phi) * Mathf.Sin(psi)) * (Mathf.Cos(phi) * Mathf.Cos(psi) - Mathf.Cos(theta) * Mathf.Sin(phi) * Mathf.Sin(psi))) * Mathf.Sin(Time.time * speed * Mathf.Deg2Rad + phase)
+            + PercentOfCrossMode / 100.0f * Vector3.forward.z * amplitude * (Mathf.Sin(theta) * (- Mathf.Cos(phi) * Mathf.Cos(2 * psi) + Mathf.Cos(theta) * Mathf.Sin(phi) * Mathf.Sin(2 * psi))) * Mathf.Sin(Time.time * speed * Mathf.Deg2Rad + phase)
+
+            + PercentOfXMode / 100.0f * unitVector.x * amplitude * (Mathf.Sin(theta) * (Mathf.Cos(theta) * Mathf.Cos(psi) * Mathf.Sin(2 * phi) + Mathf.Cos(2 * phi) * Mathf.Sin(psi))) * Mathf.Cos(Time.time * speed * Mathf.Deg2Rad + phase)
+            + PercentOfXMode / 100.0f * unitVector.y * amplitude * (2f * Mathf.Sin(theta) * Mathf.Sin(phi) * (Mathf.Cos(theta) * Mathf.Cos(psi) * Mathf.Sin(phi) + Mathf.Cos(phi) * Mathf.Sin(psi))) * Mathf.Cos(Time.time * speed * Mathf.Deg2Rad + phase)
+            + PercentOfXMode / 100.0f * Vector3.forward.z * amplitude * (Mathf.Pow(Mathf.Cos(theta),2) * Mathf.Cos(psi) * Mathf.Sin(phi) - Mathf.Cos(psi) * Mathf.Pow(Mathf.Sin(theta),2) * Mathf.Sin(phi) + Mathf.Cos(theta) * Mathf.Cos(phi) * Mathf.Sin(psi)) * Mathf.Cos(Time.time * speed * Mathf.Deg2Rad + phase)
+
+            + PercentOfYMode / 100.0f * unitVector.x * amplitude * (Mathf.Sin(theta) * (Mathf.Pow(Mathf.Cos(phi),2) * Mathf.Cos(psi) - Mathf.Cos(psi) * Mathf.Pow(Mathf.Sin(phi),2) - 2f * Mathf.Cos(theta) * Mathf.Cos(phi) * Mathf.Sin(phi) * Mathf.Sin(psi))) * Mathf.Cos(Time.time * speed * Mathf.Deg2Rad + phase)
+            + PercentOfYMode / 100.0f * unitVector.y * amplitude * (2f * Mathf.Sin(theta) * Mathf.Sin(phi) * (Mathf.Cos(phi) * Mathf.Cos(psi) - Mathf.Cos(theta) * Mathf.Sin(phi) * Mathf.Sin(psi))) * Mathf.Cos(Time.time * speed * Mathf.Deg2Rad + phase)
+            + PercentOfYMode / 100.0f * Vector3.forward.z * amplitude * (Mathf.Cos(theta) * Mathf.Cos(phi) * Mathf.Cos(psi) - Mathf.Pow(Mathf.Cos(theta),2) * Mathf.Sin(phi) * Mathf.Sin(psi) + Mathf.Pow(Mathf.Sin(theta),2) * Mathf.Sin(phi) * Mathf.Sin(psi)) * Mathf.Cos(Time.time * speed * Mathf.Deg2Rad + phase)
+
+            + PercentOfBreathingMode / 100.0f * unitVector.x * amplitude * (- Mathf.Cos(phi) * Mathf.Pow(Mathf.Sin(theta),2) * Mathf.Sin(phi)) * Mathf.Cos(Time.time * speed * Mathf.Deg2Rad + phase)
+            + PercentOfBreathingMode / 100.0f * unitVector.y * amplitude * (Mathf.Pow(Mathf.Cos(phi),2) + Mathf.Pow(Mathf.Cos(theta),2) * Mathf.Pow(Mathf.Sin(phi),2)) * Mathf.Cos(Time.time * speed * Mathf.Deg2Rad + phase)
+            + PercentOfBreathingMode / 100.0f * Vector3.forward.z * amplitude * (- Mathf.Cos(theta) * Mathf.Sin(theta) * Mathf.Sin(phi)) * Mathf.Cos(Time.time * speed * Mathf.Deg2Rad + phase)
+
+            + PercentOfLongitudinalMode / 100.0f * unitVector.x * amplitude * (Mathf.Cos(phi) * Mathf.Pow(Mathf.Sin(theta),2) * Mathf.Sin(phi)) * Mathf.Cos(Time.time * speed * Mathf.Deg2Rad + phase)
+            + PercentOfLongitudinalMode / 100.0f * unitVector.y * amplitude * (Mathf.Pow(Mathf.Sin(theta),2) * Mathf.Pow(Mathf.Sin(phi),2)) * Mathf.Cos(Time.time * speed * Mathf.Deg2Rad + phase)
+            + PercentOfLongitudinalMode / 100.0f * Vector3.forward.z * amplitude * (Mathf.Cos(theta) * Mathf.Sin(theta) * Mathf.Sin(phi)) * Mathf.Cos(Time.time * speed * Mathf.Deg2Rad + phase);
+
+
+        output.z = pos.z
+            + PercentOfPlusMode / 100.0f * unitVector.x * amplitude * Mathf.Sin(theta) * (- Mathf.Cos(theta) * Mathf.Cos(phi) * Mathf.Cos(2 * psi) + Mathf.Sin(phi) * Mathf.Sin(2 * psi)) * Mathf.Cos(Time.time * speed * Mathf.Deg2Rad + phase)
+            + PercentOfPlusMode / 100.0f * unitVector.y * amplitude * (- Mathf.Sin(theta) * (Mathf.Cos(theta) * Mathf.Cos(2 * psi) * Mathf.Sin(phi) + Mathf.Cos(phi) * Mathf.Sin(2 * psi))) * Mathf.Cos(Time.time * speed * Mathf.Deg2Rad + phase)
+            + PercentOfPlusMode / 100.0f * Vector3.forward.z * amplitude * (Mathf.Cos(2 * psi) * Mathf.Pow(Mathf.Sin(theta),2)) * Mathf.Cos(Time.time * speed * Mathf.Deg2Rad + phase) 
+
+            + PercentOfCrossMode / 100.0f * unitVector.x * amplitude * (Mathf.Sin(theta) * (Mathf.Pow(Mathf.Cos(psi),2) * Mathf.Sin(phi) - Mathf.Sin(phi) * Mathf.Pow(Mathf.Sin(psi),2) + Mathf.Cos(theta) * Mathf.Cos(phi) * Mathf.Sin(2 * psi))) * Mathf.Sin(Time.time * speed * Mathf.Deg2Rad + phase)
+            + PercentOfCrossMode / 100.0f * unitVector.y * amplitude * (Mathf.Sin(theta) * (- Mathf.Cos(phi) * Mathf.Cos(2 * psi) + Mathf.Cos(theta) * Mathf.Sin(phi) * Mathf.Sin(2 * psi))) * Mathf.Sin(Time.time * speed * Mathf.Deg2Rad + phase)
+            + PercentOfCrossMode / 100.0f * Vector3.forward.z * amplitude * (- 2f * Mathf.Cos(psi) * Mathf.Pow(Mathf.Sin(theta),2) * Mathf.Sin(psi)) * Mathf.Sin(Time.time * speed * Mathf.Deg2Rad + phase)
+
+            + PercentOfXMode / 100.0f * unitVector.x * amplitude * (Mathf.Pow(Mathf.Cos(theta),2) * Mathf.Cos(phi) * Mathf.Cos(psi) - Mathf.Cos(phi) * Mathf.Cos(psi) * Mathf.Pow(Mathf.Sin(theta),2) - Mathf.Cos(theta) * Mathf.Sin(phi) * Mathf.Sin(psi)) * Mathf.Cos(Time.time * speed * Mathf.Deg2Rad + phase)
+            + PercentOfXMode / 100.0f * unitVector.y * amplitude * (Mathf.Pow(Mathf.Cos(theta),2) * Mathf.Cos(psi) * Mathf.Sin(phi) - Mathf.Cos(psi) * Mathf.Pow(Mathf.Sin(theta),2) * Mathf.Sin(phi) + Mathf.Cos(theta) * Mathf.Cos(phi) * Mathf.Sin(psi)) * Mathf.Cos(Time.time * speed * Mathf.Deg2Rad + phase)
+            + PercentOfXMode / 100.0f * Vector3.forward.z * amplitude * (- 2f * Mathf.Cos(theta) * Mathf.Cos(psi) * Mathf.Sin(theta)) * Mathf.Cos(Time.time * speed * Mathf.Deg2Rad + phase)
+
+            + PercentOfYMode / 100.0f * unitVector.x * amplitude * (- Mathf.Cos(theta) * Mathf.Cos(psi) * Mathf.Sin(phi) - Mathf.Pow(Mathf.Cos(theta),2) * Mathf.Cos(phi) * Mathf.Sin(psi) + Mathf.Cos(phi) * Mathf.Pow(Mathf.Sin(theta),2) * Mathf.Sin(psi)) * Mathf.Cos(Time.time * speed * Mathf.Deg2Rad + phase)
+            + PercentOfYMode / 100.0f * unitVector.y * amplitude * (Mathf.Cos(theta) * Mathf.Cos(phi) * Mathf.Cos(psi) - Mathf.Pow(Mathf.Cos(theta),2) * Mathf.Sin(phi) * Mathf.Sin(psi) + Mathf.Pow(Mathf.Sin(theta),2) * Mathf.Sin(phi) * Mathf.Sin(psi)) * Mathf.Cos(Time.time * speed * Mathf.Deg2Rad + phase)
+            + PercentOfYMode / 100.0f * Vector3.forward.z * amplitude * (Mathf.Sin(2 * theta) * Mathf.Sin(psi)) * Mathf.Cos(Time.time * speed * Mathf.Deg2Rad + phase)
+
+            + PercentOfBreathingMode / 100.0f * unitVector.x * amplitude * (- Mathf.Cos(theta) * Mathf.Cos(phi) * Mathf.Sin(theta)) * Mathf.Cos(Time.time * speed * Mathf.Deg2Rad + phase)
+            + PercentOfBreathingMode / 100.0f * unitVector.y * amplitude * (- Mathf.Cos(theta) * Mathf.Sin(theta) * Mathf.Sin(phi)) * Mathf.Cos(Time.time * speed * Mathf.Deg2Rad + phase)
+            + PercentOfBreathingMode / 100.0f * Vector3.forward.z * amplitude * Mathf.Pow(Mathf.Sin(theta),2) * Mathf.Cos(Time.time * speed * Mathf.Deg2Rad + phase)
+
+            + PercentOfLongitudinalMode / 100.0f * unitVector.x * amplitude * (Mathf.Cos(theta) * Mathf.Cos(phi) * Mathf.Sin(theta)) * Mathf.Cos(Time.time * speed * Mathf.Deg2Rad + phase)
+            + PercentOfLongitudinalMode / 100.0f * unitVector.y * amplitude * (Mathf.Cos(theta) * Mathf.Sin(theta) * Mathf.Sin(phi)) * Mathf.Cos(Time.time * speed * Mathf.Deg2Rad + phase)
+            + PercentOfLongitudinalMode / 100.0f * Vector3.forward.z * amplitude * Mathf.Pow(Mathf.Cos(theta),2) * Mathf.Cos(Time.time * speed * Mathf.Deg2Rad + phase);
+
+        return output;
+        
+
+
         //Here, ampIndex is used to simulate propagation through the z-axis
 
         //Vector for assigning relative locations of the spheres
+
+        /**
         Vector3 unitVector = (pos - center).normalized;
 
         Vector3 output;
@@ -107,15 +337,114 @@ public class GW_GravityScript : MonoBehaviour
             + PercentOfYMode / 100.0f * unitVector.y *  amplitude * Mathf.Cos(Time.time * speed * Mathf.Deg2Rad + phase);
 
         return output;
+        **/
     }
 
     //Overload with different mode of simulating relative z, used for sphere object
+
 
     public Vector3 CalculateOscillations(Vector3 pos, Vector3 center, float maxradius, float phase = 0.0f, float centralZ = 0.0f,
         float PercentOfPlusMode = 0.0f, float PercentOfCrossMode = 0.0f, float PercentOfBreathingMode = 0.0f,
         float PercentOfLongitudinalMode = 0.0f,
         float PercentOfXMode = 0.0f, float PercentOfYMode = 0.0f)
     {
+
+        //Vector for assigning relative locations of the spheres
+        Vector3 unitVector = (pos - center).normalized;
+
+        //Relative z location of the spheres
+        float relativeZ = (pos.z - centralZ) / (maxradius*4);
+
+        //Debug.Log(relativeZ);
+
+        Vector3 output;
+
+        float theta = angle1;
+        float phi = angle2;
+        float psi = angle3;
+
+        output.x = pos.x
+            + PercentOfPlusMode / 100.0f * unitVector.x * amplitude * (-Mathf.Pow(Mathf.Cos(psi) * Mathf.Sin(phi) + Mathf.Cos(theta) * Mathf.Cos(phi) * Mathf.Sin(psi),2) + Mathf.Pow(Mathf.Cos(theta) * Mathf.Cos(phi) * Mathf.Cos(psi) - Mathf.Sin(phi) * Mathf.Sin(psi),2)) * Mathf.Cos(Time.time * speed * Mathf.Deg2Rad)
+            + PercentOfPlusMode / 100.0f * unitVector.y * amplitude * (0.25f * (3f + Mathf.Cos(2 * theta)) * Mathf.Cos(2 * psi) * Mathf.Sin(2 * phi) + Mathf.Cos(theta) * Mathf.Cos(2 * phi) * Mathf.Sin(2 * psi)) * Mathf.Cos(Time.time * speed * Mathf.Deg2Rad)
+            + PercentOfPlusMode / 100.0f * relativeZ * amplitude * Mathf.Sin(theta) * (- Mathf.Cos(theta) * Mathf.Cos(phi) * Mathf.Cos(2 * psi) + Mathf.Sin(phi) * Mathf.Sin(2 * psi)) * Mathf.Cos(Time.time * speed * Mathf.Deg2Rad)
+
+            + PercentOfCrossMode / 100.0f * unitVector.x * amplitude * (-2f * (Mathf.Cos(psi) * Mathf.Sin(phi) + Mathf.Cos(theta) * Mathf.Cos(phi) * Mathf.Sin(psi)) * (Mathf.Cos(theta) * Mathf.Cos(phi) * Mathf.Cos(psi) - Mathf.Sin(phi) * Mathf.Sin(psi))) * Mathf.Sin(Time.time * speed * Mathf.Deg2Rad)
+            + PercentOfCrossMode / 100.0f * unitVector.y * amplitude * (Mathf.Cos(theta) * Mathf.Cos(2 * phi) * Mathf.Cos(2 * psi) - 2f * Mathf.Cos(phi) * Mathf.Cos(psi) * Mathf.Sin(phi) * Mathf.Sin(psi) - 2 * Mathf.Pow(Mathf.Cos(theta),2) * Mathf.Cos(phi) * Mathf.Cos(psi) * Mathf.Sin(phi) * Mathf.Sin(psi)) * Mathf.Sin(Time.time * speed * Mathf.Deg2Rad)
+            + PercentOfCrossMode / 100.0f * relativeZ * amplitude * (Mathf.Sin(theta) * (Mathf.Pow(Mathf.Cos(psi),2) * Mathf.Sin(phi) - Mathf.Sin(phi) * Mathf.Pow((Mathf.Sin(psi)),2) + Mathf.Cos(theta) * Mathf.Cos(phi) * Mathf.Sin(2 * psi))) * Mathf.Sin(Time.time * speed * Mathf.Deg2Rad)
+
+            + PercentOfXMode / 100.0f * unitVector.x * amplitude * (2f * Mathf.Cos(phi) * Mathf.Sin(theta) * (Mathf.Cos(theta) * Mathf.Cos(phi) * Mathf.Cos(psi) - Mathf.Sin(phi) * Mathf.Sin(psi))) * Mathf.Cos(Time.time * speed * Mathf.Deg2Rad)
+            + PercentOfXMode / 100.0f * unitVector.y * amplitude * (Mathf.Sin(theta) * (Mathf.Cos(theta) * Mathf.Cos(psi) * Mathf.Sin(2 * phi) + Mathf.Cos(2 * phi) * Mathf.Sin(psi))) * Mathf.Cos(Time.time * speed * Mathf.Deg2Rad)
+            + PercentOfXMode / 100.0f * relativeZ * amplitude * (Mathf.Pow(Mathf.Cos(theta),2) * Mathf.Cos(phi) * Mathf.Cos(psi) - Mathf.Cos(phi) * Mathf.Cos(psi) * Mathf.Pow(Mathf.Sin(theta),2) - Mathf.Cos(theta) * Mathf.Sin(phi) * Mathf.Sin(psi)) * Mathf.Cos(Time.time * speed * Mathf.Deg2Rad)
+
+            + PercentOfYMode / 100.0f * unitVector.x * amplitude * (- 2f * Mathf.Cos(phi) * Mathf.Sin(theta) * (Mathf.Cos(psi) * Mathf.Sin(phi) + Mathf.Cos(theta) * Mathf.Cos(phi) * Mathf.Sin(psi))) * Mathf.Cos(Time.time * speed * Mathf.Deg2Rad)
+            + PercentOfYMode / 100.0f * unitVector.y * amplitude * (Mathf.Sin(theta) * (Mathf.Pow(Mathf.Cos(phi),2) * Mathf.Cos(psi) - Mathf.Cos(psi) * Mathf.Pow(Mathf.Sin(phi),2) - 2f * Mathf.Cos(theta) * Mathf.Cos(phi) * Mathf.Sin(phi) * Mathf.Sin(psi))) * Mathf.Cos(Time.time * speed * Mathf.Deg2Rad)
+            + PercentOfYMode / 100.0f * relativeZ * amplitude * (- Mathf.Cos(theta) * Mathf.Cos(psi) * Mathf.Sin(phi) - Mathf.Pow(Mathf.Cos(theta),2) * Mathf.Cos(phi) * Mathf.Sin(psi) + Mathf.Cos(phi) * Mathf.Pow(Mathf.Sin(theta),2) * Mathf.Sin(psi)) * Mathf.Cos(Time.time * speed * Mathf.Deg2Rad)
+
+            + PercentOfBreathingMode / 100.0f * unitVector.x * amplitude * (Mathf.Pow(Mathf.Cos(theta),2) * Mathf.Pow(Mathf.Cos(phi),2) + Mathf.Pow(Mathf.Sin(phi),2)) * Mathf.Cos(Time.time * speed * Mathf.Deg2Rad)
+            + PercentOfBreathingMode / 100.0f * unitVector.y * amplitude * (- Mathf.Cos(phi) * Mathf.Pow(Mathf.Sin(theta),2) * Mathf.Sin(phi)) * Mathf.Cos(Time.time * speed * Mathf.Deg2Rad)
+            + PercentOfBreathingMode / 100.0f * relativeZ * amplitude * (- Mathf.Cos(theta) * Mathf.Cos(phi) * Mathf.Sin(theta)) * Mathf.Cos(Time.time * speed * Mathf.Deg2Rad)
+
+            + PercentOfLongitudinalMode / 100.0f * unitVector.x * amplitude * (Mathf.Pow(Mathf.Cos(phi),2) * Mathf.Pow(Mathf.Sin(theta),2)) * Mathf.Cos(Time.time * speed * Mathf.Deg2Rad)
+            + PercentOfLongitudinalMode / 100.0f * unitVector.y * amplitude * (Mathf.Cos(phi) * Mathf.Pow(Mathf.Sin(theta),2) * Mathf.Sin(phi)) * Mathf.Cos(Time.time * speed * Mathf.Deg2Rad)
+            + PercentOfLongitudinalMode / 100.0f * relativeZ * amplitude * (Mathf.Cos(theta) * Mathf.Cos(phi) * Mathf.Sin(theta)) * Mathf.Cos(Time.time * speed * Mathf.Deg2Rad);
+
+
+        output.y = pos.y
+            + PercentOfPlusMode / 100.0f * unitVector.x * amplitude * (0.25f * (3f + Mathf.Cos(2 * theta)) * Mathf.Cos(2 * psi) * Mathf.Sin(2 * phi) + Mathf.Cos(theta) * Mathf.Cos(2 * phi) * Mathf.Sin(2 * psi)) * Mathf.Cos(Time.time * speed * Mathf.Deg2Rad)
+            + PercentOfPlusMode / 100.0f * unitVector.y * amplitude * (- Mathf.Pow(Mathf.Cos(phi),2) * Mathf.Cos(2 * psi) + Mathf.Cos(theta) * (Mathf.Cos(theta) * Mathf.Cos(2 * psi) * Mathf.Pow(Mathf.Sin(phi),2) + Mathf.Sin(2 * phi) * Mathf.Sin(2 * psi))) * Mathf.Cos(Time.time * speed * Mathf.Deg2Rad)
+            + PercentOfPlusMode / 100.0f * relativeZ * amplitude * (- Mathf.Sin(theta) * (Mathf.Cos(theta) * Mathf.Cos(2 * psi) * Mathf.Sin(phi) + Mathf.Cos(phi) * Mathf.Sin(2 * psi))) * Mathf.Cos(Time.time * speed * Mathf.Deg2Rad)
+
+            + PercentOfCrossMode / 100.0f * unitVector.x * amplitude * (Mathf.Cos(theta) * Mathf.Cos(2 * phi) * Mathf.Cos(2 * psi) - 2 * Mathf.Cos(phi) * Mathf.Cos(psi) * Mathf.Sin(phi) * Mathf.Sin(psi) - 2 * Mathf.Pow(Mathf.Cos(theta),2) * Mathf.Cos(phi) * Mathf.Cos(psi) * Mathf.Sin(phi) * Mathf.Sin(psi)) * Mathf.Sin(Time.time * speed * Mathf.Deg2Rad)
+            + PercentOfCrossMode / 100.0f * unitVector.y * amplitude * (2f * (Mathf.Cos(theta) * Mathf.Cos(psi) * Mathf.Sin(phi) + Mathf.Cos(phi) * Mathf.Sin(psi)) * (Mathf.Cos(phi) * Mathf.Cos(psi) - Mathf.Cos(theta) * Mathf.Sin(phi) * Mathf.Sin(psi))) * Mathf.Sin(Time.time * speed * Mathf.Deg2Rad)
+            + PercentOfCrossMode / 100.0f * relativeZ * amplitude * (Mathf.Sin(theta) * (- Mathf.Cos(phi) * Mathf.Cos(2 * psi) + Mathf.Cos(theta) * Mathf.Sin(phi) * Mathf.Sin(2 * psi))) * Mathf.Sin(Time.time * speed * Mathf.Deg2Rad)
+
+            + PercentOfXMode / 100.0f * unitVector.x * amplitude * (Mathf.Sin(theta) * (Mathf.Cos(theta) * Mathf.Cos(psi) * Mathf.Sin(2 * phi) + Mathf.Cos(2 * phi) * Mathf.Sin(psi))) * Mathf.Cos(Time.time * speed * Mathf.Deg2Rad)
+            + PercentOfXMode / 100.0f * unitVector.y * amplitude * (2f * Mathf.Sin(theta) * Mathf.Sin(phi) * (Mathf.Cos(theta) * Mathf.Cos(psi) * Mathf.Sin(phi) + Mathf.Cos(phi) * Mathf.Sin(psi))) * Mathf.Cos(Time.time * speed * Mathf.Deg2Rad)
+            + PercentOfXMode / 100.0f * relativeZ * amplitude * (Mathf.Pow(Mathf.Cos(theta),2) * Mathf.Cos(psi) * Mathf.Sin(phi) - Mathf.Cos(psi) * Mathf.Pow(Mathf.Sin(theta),2) * Mathf.Sin(phi) + Mathf.Cos(theta) * Mathf.Cos(phi) * Mathf.Sin(psi)) * Mathf.Cos(Time.time * speed * Mathf.Deg2Rad)
+
+            + PercentOfYMode / 100.0f * unitVector.x * amplitude * (Mathf.Sin(theta) * (Mathf.Pow(Mathf.Cos(phi),2) * Mathf.Cos(psi) - Mathf.Cos(psi) * Mathf.Pow(Mathf.Sin(phi),2) - 2f * Mathf.Cos(theta) * Mathf.Cos(phi) * Mathf.Sin(phi) * Mathf.Sin(psi))) * Mathf.Cos(Time.time * speed * Mathf.Deg2Rad)
+            + PercentOfYMode / 100.0f * unitVector.y * amplitude * (2f * Mathf.Sin(theta) * Mathf.Sin(phi) * (Mathf.Cos(phi) * Mathf.Cos(psi) - Mathf.Cos(theta) * Mathf.Sin(phi) * Mathf.Sin(psi))) * Mathf.Cos(Time.time * speed * Mathf.Deg2Rad)
+            + PercentOfYMode / 100.0f * relativeZ * amplitude * (Mathf.Cos(theta) * Mathf.Cos(phi) * Mathf.Cos(psi) - Mathf.Pow(Mathf.Cos(theta),2) * Mathf.Sin(phi) * Mathf.Sin(psi) + Mathf.Pow(Mathf.Sin(theta),2) * Mathf.Sin(phi) * Mathf.Sin(psi)) * Mathf.Cos(Time.time * speed * Mathf.Deg2Rad)
+
+            + PercentOfBreathingMode / 100.0f * unitVector.x * amplitude * (- Mathf.Cos(phi) * Mathf.Pow(Mathf.Sin(theta),2) * Mathf.Sin(phi)) * Mathf.Cos(Time.time * speed * Mathf.Deg2Rad)
+            + PercentOfBreathingMode / 100.0f * unitVector.y * amplitude * (Mathf.Pow(Mathf.Cos(phi),2) + Mathf.Pow(Mathf.Cos(theta),2) * Mathf.Pow(Mathf.Sin(phi),2)) * Mathf.Cos(Time.time * speed * Mathf.Deg2Rad)
+            + PercentOfBreathingMode / 100.0f * relativeZ * amplitude * (- Mathf.Cos(theta) * Mathf.Sin(theta) * Mathf.Sin(phi)) * Mathf.Cos(Time.time * speed * Mathf.Deg2Rad)
+
+            + PercentOfLongitudinalMode / 100.0f * unitVector.x * amplitude * (Mathf.Cos(phi) * Mathf.Pow(Mathf.Sin(theta),2) * Mathf.Sin(phi)) * Mathf.Cos(Time.time * speed * Mathf.Deg2Rad)
+            + PercentOfLongitudinalMode / 100.0f * unitVector.y * amplitude * (Mathf.Pow(Mathf.Sin(theta),2) * Mathf.Pow(Mathf.Sin(phi),2)) * Mathf.Cos(Time.time * speed * Mathf.Deg2Rad)
+            + PercentOfLongitudinalMode / 100.0f * relativeZ * amplitude * (Mathf.Cos(theta) * Mathf.Sin(theta) * Mathf.Sin(phi)) * Mathf.Cos(Time.time * speed * Mathf.Deg2Rad);
+
+
+        output.z = pos.z
+            + PercentOfPlusMode / 100.0f * unitVector.x * amplitude * Mathf.Sin(theta) * (- Mathf.Cos(theta) * Mathf.Cos(phi) * Mathf.Cos(2 * psi) + Mathf.Sin(phi) * Mathf.Sin(2 * psi)) * Mathf.Cos(Time.time * speed * Mathf.Deg2Rad)
+            + PercentOfPlusMode / 100.0f * unitVector.y * amplitude * (- Mathf.Sin(theta) * (Mathf.Cos(theta) * Mathf.Cos(2 * psi) * Mathf.Sin(phi) + Mathf.Cos(phi) * Mathf.Sin(2 * psi))) * Mathf.Cos(Time.time * speed * Mathf.Deg2Rad)
+            + PercentOfPlusMode / 100.0f * Vector3.forward.z * relativeZ * amplitude * (Mathf.Cos(2 * psi) * Mathf.Pow(Mathf.Sin(theta),2)) * Mathf.Cos(Time.time * speed * Mathf.Deg2Rad) 
+
+            + PercentOfCrossMode / 100.0f * unitVector.x * amplitude * (Mathf.Sin(theta) * (Mathf.Pow(Mathf.Cos(psi),2) * Mathf.Sin(phi) - Mathf.Sin(phi) * Mathf.Pow(Mathf.Sin(psi),2) + Mathf.Cos(theta) * Mathf.Cos(phi) * Mathf.Sin(2 * psi))) * Mathf.Sin(Time.time * speed * Mathf.Deg2Rad)
+            + PercentOfCrossMode / 100.0f * unitVector.y * amplitude * (Mathf.Sin(theta) * (- Mathf.Cos(phi) * Mathf.Cos(2 * psi) + Mathf.Cos(theta) * Mathf.Sin(phi) * Mathf.Sin(2 * psi))) * Mathf.Sin(Time.time * speed * Mathf.Deg2Rad)
+            + PercentOfCrossMode / 100.0f * Vector3.forward.z * relativeZ * amplitude * (- 2f * Mathf.Cos(psi) * Mathf.Pow(Mathf.Sin(theta),2) * Mathf.Sin(psi)) * Mathf.Sin(Time.time * speed * Mathf.Deg2Rad)
+
+            + PercentOfXMode / 100.0f * unitVector.x * amplitude * (Mathf.Pow(Mathf.Cos(theta),2) * Mathf.Cos(phi) * Mathf.Cos(psi) - Mathf.Cos(phi) * Mathf.Cos(psi) * Mathf.Pow(Mathf.Sin(theta),2) - Mathf.Cos(theta) * Mathf.Sin(phi) * Mathf.Sin(psi)) * Mathf.Cos(Time.time * speed * Mathf.Deg2Rad)
+            + PercentOfXMode / 100.0f * unitVector.y * amplitude * (Mathf.Pow(Mathf.Cos(theta),2) * Mathf.Cos(psi) * Mathf.Sin(phi) - Mathf.Cos(psi) * Mathf.Pow(Mathf.Sin(theta),2) * Mathf.Sin(phi) + Mathf.Cos(theta) * Mathf.Cos(phi) * Mathf.Sin(psi)) * Mathf.Cos(Time.time * speed * Mathf.Deg2Rad)
+            + PercentOfXMode / 100.0f * Vector3.forward.z * relativeZ * amplitude * (- 2f * Mathf.Cos(theta) * Mathf.Cos(psi) * Mathf.Sin(theta)) * Mathf.Cos(Time.time * speed * Mathf.Deg2Rad)
+
+            + PercentOfYMode / 100.0f * unitVector.x * amplitude * (- Mathf.Cos(theta) * Mathf.Cos(psi) * Mathf.Sin(phi) - Mathf.Pow(Mathf.Cos(theta),2) * Mathf.Cos(phi) * Mathf.Sin(psi) + Mathf.Cos(phi) * Mathf.Pow(Mathf.Sin(theta),2) * Mathf.Sin(psi)) * Mathf.Cos(Time.time * speed * Mathf.Deg2Rad)
+            + PercentOfYMode / 100.0f * unitVector.y * amplitude * (Mathf.Cos(theta) * Mathf.Cos(phi) * Mathf.Cos(psi) - Mathf.Pow(Mathf.Cos(theta),2) * Mathf.Sin(phi) * Mathf.Sin(psi) + Mathf.Pow(Mathf.Sin(theta),2) * Mathf.Sin(phi) * Mathf.Sin(psi)) * Mathf.Cos(Time.time * speed * Mathf.Deg2Rad)
+            + PercentOfYMode / 100.0f * Vector3.forward.z * relativeZ * amplitude * (Mathf.Sin(2*theta)*Mathf.Sin(psi)) * Mathf.Cos(Time.time * speed * Mathf.Deg2Rad)
+
+            + PercentOfBreathingMode / 100.0f * unitVector.x * amplitude * (- Mathf.Cos(theta) * Mathf.Cos(phi) * Mathf.Sin(theta)) * Mathf.Cos(Time.time * speed * Mathf.Deg2Rad)
+            + PercentOfBreathingMode / 100.0f * unitVector.y * amplitude * (- Mathf.Cos(theta) * Mathf.Sin(theta) * Mathf.Sin(phi)) * Mathf.Cos(Time.time * speed * Mathf.Deg2Rad)
+            + PercentOfBreathingMode / 100.0f * Vector3.forward.z * relativeZ * amplitude * Mathf.Pow(Mathf.Sin(theta),2) * Mathf.Cos(Time.time * speed * Mathf.Deg2Rad)
+
+            + PercentOfLongitudinalMode / 100.0f * unitVector.x * amplitude * (Mathf.Cos(theta) * Mathf.Cos(phi) * Mathf.Sin(theta)) * Mathf.Cos(Time.time * speed * Mathf.Deg2Rad)
+            + PercentOfLongitudinalMode / 100.0f * unitVector.y * amplitude * (Mathf.Cos(theta) * Mathf.Sin(theta) * Mathf.Sin(phi)) * Mathf.Cos(Time.time * speed * Mathf.Deg2Rad)
+            + PercentOfLongitudinalMode / 100.0f * Vector3.forward.z * relativeZ * amplitude * Mathf.Pow(Mathf.Cos(theta),2) * Mathf.Cos(Time.time * speed * Mathf.Deg2Rad);
+
+        return output;
+
+
+
+        /**
         //Vector for assigning relative locations of the spheres
         Vector3 unitVector = (pos - center).normalized;
 
@@ -130,7 +459,7 @@ public class GW_GravityScript : MonoBehaviour
             + PercentOfPlusMode / 100.0f * unitVector.x * amplitude * Mathf.Cos(Time.time * speed * Mathf.Deg2Rad)
             + PercentOfCrossMode / 100.0f * unitVector.y * amplitude * Mathf.Sin(Time.time * speed * Mathf.Deg2Rad)
             + PercentOfBreathingMode / 100.0f * unitVector.x * amplitude * Mathf.Cos(Time.time * speed * Mathf.Deg2Rad)
-            + PercentOfXMode / 100.0f *  relativeZ * amplitude * Mathf.Cos(Time.time * speed * Mathf.Deg2Rad);
+            + PercentOfXMode / 100.0f * relativeZ * amplitude * Mathf.Cos(Time.time * speed * Mathf.Deg2Rad);
 
 
 
@@ -146,6 +475,7 @@ public class GW_GravityScript : MonoBehaviour
             - PercentOfYMode / 100.0f * unitVector.y * amplitude * Mathf.Sin(Time.time * speed * Mathf.Deg2Rad);
 
         return output;
+        **/
     }
 
     //Overload for mesh-based sphere, using a single center position vector for all x, y, and z
@@ -155,6 +485,101 @@ public class GW_GravityScript : MonoBehaviour
        float PercentOfLongitudinalMode = 0.0f,
        float PercentOfXMode = 0.0f, float PercentOfYMode = 0.0f)
     {
+
+        //Vector for assigning relative locations of the spheres
+        Vector3 unitVector = (pos - center);
+
+        //Debug.Log(relativeZ);
+
+        Vector3 output;
+
+        float theta = angle1;
+        float phi = angle2;
+        float psi = angle3;
+
+
+        output.x = pos.x
+            + PercentOfPlusMode / 100.0f * unitVector.x * amplitude * (-Mathf.Pow(Mathf.Cos(psi) * Mathf.Sin(phi) + Mathf.Cos(theta) * Mathf.Cos(phi) * Mathf.Sin(psi),2) + Mathf.Pow(Mathf.Cos(theta) * Mathf.Cos(phi) * Mathf.Cos(psi) - Mathf.Sin(phi) * Mathf.Sin(psi),2)) * Mathf.Cos(Time.time * speed * Mathf.Deg2Rad + unitVector.z * 1000)
+            + PercentOfPlusMode / 100.0f * unitVector.y * amplitude * (0.25f * (3f + Mathf.Cos(2 * theta)) * Mathf.Cos(2 * psi) * Mathf.Sin(2 * phi) + Mathf.Cos(theta) * Mathf.Cos(2 * phi) * Mathf.Sin(2 * psi)) * Mathf.Cos(Time.time * speed * Mathf.Deg2Rad + unitVector.z * 1000)
+            + PercentOfPlusMode / 100.0f * unitVector.z * amplitude * Mathf.Sin(theta) * (- Mathf.Cos(theta) * Mathf.Cos(phi) * Mathf.Cos(2 * psi) + Mathf.Sin(phi) * Mathf.Sin(2 * psi)) * Mathf.Cos(Time.time * speed * Mathf.Deg2Rad + unitVector.z * 1000)
+
+            + PercentOfCrossMode / 100.0f * unitVector.x * amplitude * (-2f * (Mathf.Cos(psi) * Mathf.Sin(phi) + Mathf.Cos(theta) * Mathf.Cos(phi) * Mathf.Sin(psi)) * (Mathf.Cos(theta) * Mathf.Cos(phi) * Mathf.Cos(psi) - Mathf.Sin(phi) * Mathf.Sin(psi))) * Mathf.Sin(Time.time * speed * Mathf.Deg2Rad + unitVector.z * 1000)
+            + PercentOfCrossMode / 100.0f * unitVector.y * amplitude * (Mathf.Cos(theta) * Mathf.Cos(2 * phi) * Mathf.Cos(2 * psi) - 2f * Mathf.Cos(phi) * Mathf.Cos(psi) * Mathf.Sin(phi) * Mathf.Sin(psi) - 2f * Mathf.Pow(Mathf.Cos(theta),2) * Mathf.Cos(phi) * Mathf.Cos(psi) * Mathf.Sin(phi) * Mathf.Sin(psi)) * Mathf.Sin(Time.time * speed * Mathf.Deg2Rad + unitVector.z * 1000)
+            + PercentOfCrossMode / 100.0f * unitVector.z * amplitude * (Mathf.Sin(theta) * (Mathf.Pow(Mathf.Cos(psi),2) * Mathf.Sin(phi) - Mathf.Sin(phi) * Mathf.Pow((Mathf.Sin(psi)),2) + Mathf.Cos(theta) * Mathf.Cos(phi) * Mathf.Sin(2*psi))) * Mathf.Sin(Time.time * speed * Mathf.Deg2Rad + unitVector.z * 1000)
+
+            + PercentOfXMode / 100.0f * unitVector.x * amplitude * (2f * Mathf.Cos(phi) * Mathf.Sin(theta) * (Mathf.Cos(theta) * Mathf.Cos(phi) * Mathf.Cos(psi) - Mathf.Sin(phi) * Mathf.Sin(psi))) * Mathf.Cos(Time.time * speed * Mathf.Deg2Rad + unitVector.y * 1000) 
+            + PercentOfXMode / 100.0f * unitVector.y * amplitude * (Mathf.Sin(theta) * (Mathf.Cos(theta) * Mathf.Cos(psi) * Mathf.Sin(2 * phi) + Mathf.Cos(2 * phi) * Mathf.Sin(psi))) * Mathf.Cos(Time.time * speed * Mathf.Deg2Rad + unitVector.y * 1000)
+            + PercentOfXMode / 100.0f * unitVector.z * amplitude * (Mathf.Pow(Mathf.Cos(theta),2) * Mathf.Cos(phi) * Mathf.Cos(psi) - Mathf.Cos(phi) * Mathf.Cos(psi) * Mathf.Pow(Mathf.Sin(theta),2) - Mathf.Cos(theta) * Mathf.Sin(phi) * Mathf.Sin(psi)) * Mathf.Cos(Time.time * speed * Mathf.Deg2Rad + unitVector.y * 1000)
+
+            + PercentOfYMode / 100.0f * unitVector.x * amplitude * (- 2f * Mathf.Cos(phi) * Mathf.Sin(theta) * (Mathf.Cos(psi) * Mathf.Sin(phi) + Mathf.Cos(theta) * Mathf.Cos(phi) * Mathf.Sin(psi))) * Mathf.Cos(Time.time * speed * Mathf.Deg2Rad + unitVector.x * 1000)
+            + PercentOfYMode / 100.0f * unitVector.y * amplitude * (Mathf.Sin(theta) * (Mathf.Pow(Mathf.Cos(phi),2) * Mathf.Cos(psi) - Mathf.Cos(psi) * Mathf.Pow(Mathf.Sin(phi),2) - 2f * Mathf.Cos(theta) * Mathf.Cos(phi) * Mathf.Sin(phi) * Mathf.Sin(psi))) * Mathf.Cos(Time.time * speed * Mathf.Deg2Rad + unitVector.x * 1000)
+            + PercentOfYMode / 100.0f * unitVector.z * amplitude * (- Mathf.Cos(theta) * Mathf.Cos(psi) * Mathf.Sin(phi) - Mathf.Pow(Mathf.Cos(theta),2) * Mathf.Cos(phi) * Mathf.Sin(psi) + Mathf.Cos(phi) * Mathf.Pow(Mathf.Sin(theta),2) * Mathf.Sin(psi)) * Mathf.Cos(Time.time * speed * Mathf.Deg2Rad + unitVector.x * 1000)
+
+            + PercentOfBreathingMode / 100.0f * unitVector.x * amplitude * (Mathf.Pow(Mathf.Cos(theta),2) * Mathf.Pow(Mathf.Cos(phi),2) + Mathf.Pow(Mathf.Sin(phi),2)) * Mathf.Cos(Time.time * speed * Mathf.Deg2Rad + unitVector.z * 1000)
+            + PercentOfBreathingMode / 100.0f * unitVector.y * amplitude * (- Mathf.Cos(phi) * Mathf.Pow(Mathf.Sin(theta),2) * Mathf.Sin(phi)) * Mathf.Cos(Time.time * speed * Mathf.Deg2Rad + unitVector.z * 1000)
+            + PercentOfBreathingMode / 100.0f * unitVector.z * amplitude * (- Mathf.Cos(theta) * Mathf.Cos(phi) * Mathf.Sin(theta)) * Mathf.Cos(Time.time * speed * Mathf.Deg2Rad + unitVector.z * 1000)
+
+            + PercentOfLongitudinalMode / 100.0f * unitVector.x * amplitude * (Mathf.Pow(Mathf.Cos(phi),2) * Mathf.Pow(Mathf.Sin(theta),2)) * Mathf.Cos(Time.time * speed * Mathf.Deg2Rad)
+            + PercentOfLongitudinalMode / 100.0f * unitVector.y * amplitude * (Mathf.Cos(phi) * Mathf.Pow(Mathf.Sin(theta),2) * Mathf.Sin(phi)) * Mathf.Cos(Time.time * speed * Mathf.Deg2Rad)
+            + PercentOfLongitudinalMode / 100.0f * unitVector.z * amplitude * (Mathf.Cos(theta) * Mathf.Cos(phi) * Mathf.Sin(theta)) * Mathf.Cos(Time.time * speed * Mathf.Deg2Rad);
+
+
+        output.y = pos.y
+            + PercentOfPlusMode / 100.0f * unitVector.x * amplitude * (0.25f * (3f + Mathf.Cos(2 * theta)) * Mathf.Cos(2 * psi) * Mathf.Sin(2 * phi) + Mathf.Cos(theta) * Mathf.Cos(2 * phi) * Mathf.Sin(2 * psi)) * Mathf.Cos(Time.time * speed * Mathf.Deg2Rad + unitVector.z * 1000)
+            + PercentOfPlusMode / 100.0f * unitVector.y * amplitude * (- Mathf.Pow(Mathf.Cos(phi),2) * Mathf.Cos(2 * psi) + Mathf.Cos(theta) * (Mathf.Cos(theta) * Mathf.Cos(2 * psi) * Mathf.Pow(Mathf.Sin(phi),2) + Mathf.Sin(2 * phi) * Mathf.Sin(2 * psi))) * Mathf.Cos(Time.time * speed * Mathf.Deg2Rad + unitVector.z * 1000)
+            + PercentOfPlusMode / 100.0f * unitVector.z * amplitude * (- Mathf.Sin(theta) * (Mathf.Cos(theta) * Mathf.Cos(2 * psi) * Mathf.Sin(phi) + Mathf.Cos(phi) * Mathf.Sin(2 * psi))) * Mathf.Cos(Time.time * speed * Mathf.Deg2Rad + unitVector.z * 1000)
+
+            + PercentOfCrossMode / 100.0f * unitVector.x * amplitude * (Mathf.Cos(theta) * Mathf.Cos(2 * phi) * Mathf.Cos(2 * psi) - 2 * Mathf.Cos(phi) * Mathf.Cos(psi) * Mathf.Sin(phi) * Mathf.Sin(psi) - 2f * Mathf.Pow(Mathf.Cos(theta),2) * Mathf.Cos(phi) * Mathf.Cos(psi) * Mathf.Sin(phi) * Mathf.Sin(psi)) * Mathf.Sin(Time.time * speed * Mathf.Deg2Rad + unitVector.z * 1000)
+            + PercentOfCrossMode / 100.0f * unitVector.y * amplitude * (2f * (Mathf.Cos(theta) * Mathf.Cos(psi) * Mathf.Sin(phi) + Mathf.Cos(phi) * Mathf.Sin(psi)) * (Mathf.Cos(phi) * Mathf.Cos(psi) - Mathf.Cos(theta) * Mathf.Sin(phi) * Mathf.Sin(psi))) * Mathf.Sin(Time.time * speed * Mathf.Deg2Rad + unitVector.z * 1000)
+            + PercentOfCrossMode / 100.0f * unitVector.z * amplitude * (Mathf.Sin(theta) * (- Mathf.Cos(phi) * Mathf.Cos(2 * psi) + Mathf.Cos(theta) * Mathf.Sin(phi) * Mathf.Sin(2 * psi))) * Mathf.Sin(Time.time * speed * Mathf.Deg2Rad + unitVector.z * 1000)
+
+            + PercentOfXMode / 100.0f * unitVector.x * amplitude * (Mathf.Sin(theta) * (Mathf.Cos(theta) * Mathf.Cos(psi) * Mathf.Sin(2 * phi) + Mathf.Cos(2 * phi) * Mathf.Sin(psi))) * Mathf.Cos(Time.time * speed * Mathf.Deg2Rad + unitVector.y * 1000)
+            + PercentOfXMode / 100.0f * unitVector.y * amplitude * (2f * Mathf.Sin(theta) * Mathf.Sin(phi) * (Mathf.Cos(theta) * Mathf.Cos(psi) * Mathf.Sin(phi) + Mathf.Cos(phi) * Mathf.Sin(psi))) * Mathf.Cos(Time.time * speed * Mathf.Deg2Rad + unitVector.y * 1000)
+            + PercentOfXMode / 100.0f * unitVector.z * amplitude * (Mathf.Pow(Mathf.Cos(theta),2) * Mathf.Cos(psi) * Mathf.Sin(phi) - Mathf.Cos(psi) * Mathf.Pow(Mathf.Sin(theta),2) * Mathf.Sin(phi) + Mathf.Cos(theta) * Mathf.Cos(phi) * Mathf.Sin(psi)) * Mathf.Cos(Time.time * speed * Mathf.Deg2Rad + unitVector.y * 1000)
+
+            + PercentOfYMode / 100.0f * unitVector.x * amplitude * (Mathf.Sin(theta) * (Mathf.Pow(Mathf.Cos(phi),2) * Mathf.Cos(psi) - Mathf.Cos(psi) * Mathf.Pow(Mathf.Sin(phi),2) - 2f * Mathf.Cos(theta) * Mathf.Cos(phi) * Mathf.Sin(phi) * Mathf.Sin(psi))) * Mathf.Cos(Time.time * speed * Mathf.Deg2Rad + unitVector.x * 1000)
+            + PercentOfYMode / 100.0f * unitVector.y * amplitude * (2f * Mathf.Sin(theta) * Mathf.Sin(phi) * (Mathf.Cos(phi) * Mathf.Cos(psi) - Mathf.Cos(theta) * Mathf.Sin(phi) * Mathf.Sin(psi))) * Mathf.Cos(Time.time * speed * Mathf.Deg2Rad + unitVector.x * 1000)
+            + PercentOfYMode / 100.0f * unitVector.z * amplitude * (Mathf.Cos(theta) * Mathf.Cos(phi) * Mathf.Cos(psi) - Mathf.Pow(Mathf.Cos(theta),2) * Mathf.Sin(phi) * Mathf.Sin(psi) + Mathf.Pow(Mathf.Sin(theta),2) * Mathf.Sin(phi) * Mathf.Sin(psi)) * Mathf.Cos(Time.time * speed * Mathf.Deg2Rad + unitVector.x * 1000)
+
+            + PercentOfBreathingMode / 100.0f * unitVector.x * amplitude * (- Mathf.Cos(phi) * Mathf.Pow(Mathf.Sin(theta),2) * Mathf.Sin(phi)) * Mathf.Cos(Time.time * speed * Mathf.Deg2Rad + unitVector.z * 1000)
+            + PercentOfBreathingMode / 100.0f * unitVector.y * amplitude * (Mathf.Pow(Mathf.Cos(phi),2) + Mathf.Pow(Mathf.Cos(theta),2) * Mathf.Pow(Mathf.Sin(phi),2)) * Mathf.Cos(Time.time * speed * Mathf.Deg2Rad + unitVector.z * 1000)
+            + PercentOfBreathingMode / 100.0f * unitVector.z * amplitude * (- Mathf.Cos(theta) * Mathf.Sin(theta) * Mathf.Sin(phi)) * Mathf.Cos(Time.time * speed * Mathf.Deg2Rad + unitVector.z * 1000)
+
+            + PercentOfLongitudinalMode / 100.0f * unitVector.x * amplitude * (Mathf.Cos(phi) * Mathf.Pow(Mathf.Sin(theta),2) * Mathf.Sin(phi)) * Mathf.Cos(Time.time * speed * Mathf.Deg2Rad)
+            + PercentOfLongitudinalMode / 100.0f * unitVector.y * amplitude * (Mathf.Pow(Mathf.Sin(theta),2) * Mathf.Pow(Mathf.Sin(phi),2)) * Mathf.Cos(Time.time * speed * Mathf.Deg2Rad)
+            + PercentOfLongitudinalMode / 100.0f * unitVector.z * amplitude * (Mathf.Cos(theta) * Mathf.Sin(theta) * Mathf.Sin(phi)) * Mathf.Cos(Time.time * speed * Mathf.Deg2Rad);
+
+
+        output.z = pos.z
+            + PercentOfPlusMode / 100.0f * unitVector.x * amplitude * Mathf.Sin(theta) * (- Mathf.Cos(theta) * Mathf.Cos(phi) * Mathf.Cos(2 * psi) + Mathf.Sin(phi) * Mathf.Sin(2 * psi)) * Mathf.Cos(Time.time * speed * Mathf.Deg2Rad + unitVector.z * 1000)
+            + PercentOfPlusMode / 100.0f * unitVector.y * amplitude * (- Mathf.Sin(theta) * (Mathf.Cos(theta) * Mathf.Cos(2 * psi) * Mathf.Sin(phi) + Mathf.Cos(phi) * Mathf.Sin(2 * psi))) * Mathf.Cos(Time.time * speed * Mathf.Deg2Rad + unitVector.z * 1000)
+            + PercentOfPlusMode / 100.0f * unitVector.z * amplitude * (Mathf.Cos(2 * psi) * Mathf.Pow(Mathf.Sin(theta),2)) * Mathf.Cos(Time.time * speed * Mathf.Deg2Rad + unitVector.z * 1000) 
+
+            + PercentOfCrossMode / 100.0f * unitVector.x * amplitude * (Mathf.Sin(theta) * (Mathf.Pow(Mathf.Cos(psi),2) * Mathf.Sin(phi) - Mathf.Sin(phi) * Mathf.Pow(Mathf.Sin(psi),2) + Mathf.Cos(theta) * Mathf.Cos(phi) * Mathf.Sin(2 * psi))) * Mathf.Sin(Time.time * speed * Mathf.Deg2Rad + unitVector.z * 1000) 
+            + PercentOfCrossMode / 100.0f * unitVector.y * amplitude * (Mathf.Sin(theta) * (- Mathf.Cos(phi) * Mathf.Cos(2 * psi) + Mathf.Cos(theta) * Mathf.Sin(phi) * Mathf.Sin(2 * psi))) * Mathf.Sin(Time.time * speed * Mathf.Deg2Rad + unitVector.z * 1000)
+            + PercentOfCrossMode / 100.0f * unitVector.z * amplitude * (- 2f * Mathf.Cos(psi) * Mathf.Pow(Mathf.Sin(theta),2) * Mathf.Sin(psi)) * Mathf.Sin(Time.time * speed * Mathf.Deg2Rad + unitVector.z * 1000)
+
+            + PercentOfXMode / 100.0f * unitVector.x * amplitude * (Mathf.Pow(Mathf.Cos(theta),2) * Mathf.Cos(phi) * Mathf.Cos(psi) - Mathf.Cos(phi) * Mathf.Cos(psi) * Mathf.Pow(Mathf.Sin(theta),2) - Mathf.Cos(theta) * Mathf.Sin(phi) * Mathf.Sin(psi)) * Mathf.Cos(Time.time * speed * Mathf.Deg2Rad + unitVector.y * 1000)
+            + PercentOfXMode / 100.0f * unitVector.y * amplitude * (Mathf.Pow(Mathf.Cos(theta),2) * Mathf.Cos(psi) * Mathf.Sin(phi) - Mathf.Cos(psi) * Mathf.Pow(Mathf.Sin(theta),2) * Mathf.Sin(phi) + Mathf.Cos(theta) * Mathf.Cos(phi) * Mathf.Sin(psi)) * Mathf.Cos(Time.time * speed * Mathf.Deg2Rad + unitVector.y * 1000)
+            + PercentOfXMode / 100.0f * unitVector.z * amplitude * (- 2f * Mathf.Cos(theta) * Mathf.Cos(psi) * Mathf.Sin(theta)) * Mathf.Cos(Time.time * speed * Mathf.Deg2Rad + unitVector.y * 1000)
+
+            + PercentOfYMode / 100.0f * unitVector.x * amplitude * (- Mathf.Cos(theta) * Mathf.Cos(psi) * Mathf.Sin(phi) - Mathf.Pow(Mathf.Cos(theta),2) * Mathf.Cos(phi) * Mathf.Sin(psi) + Mathf.Cos(phi) * Mathf.Pow(Mathf.Sin(theta),2) * Mathf.Sin(psi)) * Mathf.Cos(Time.time * speed * Mathf.Deg2Rad + unitVector.x * 1000)
+            + PercentOfYMode / 100.0f * unitVector.y * amplitude * (Mathf.Cos(theta) * Mathf.Cos(phi) * Mathf.Cos(psi) - Mathf.Pow(Mathf.Cos(theta),2) * Mathf.Sin(phi) * Mathf.Sin(psi) + Mathf.Pow(Mathf.Sin(theta),2) * Mathf.Sin(phi) * Mathf.Sin(psi)) * Mathf.Cos(Time.time * speed * Mathf.Deg2Rad + unitVector.x * 1000)
+            + PercentOfYMode / 100.0f * unitVector.z * amplitude * (Mathf.Sin(2*theta)*Mathf.Sin(psi)) * Mathf.Cos(Time.time * speed * Mathf.Deg2Rad + unitVector.x * 1000)
+
+            + PercentOfBreathingMode / 100.0f * unitVector.x * amplitude * (- Mathf.Cos(theta) * Mathf.Cos(phi) * Mathf.Sin(theta)) * Mathf.Cos(Time.time * speed * Mathf.Deg2Rad + unitVector.z * 1000)
+            + PercentOfBreathingMode / 100.0f * unitVector.y * amplitude * (- Mathf.Cos(theta) * Mathf.Sin(theta) * Mathf.Sin(phi)) * Mathf.Cos(Time.time * speed * Mathf.Deg2Rad + unitVector.z * 1000) 
+            + PercentOfBreathingMode / 100.0f * unitVector.z * amplitude * Mathf.Pow(Mathf.Sin(theta),2) * Mathf.Cos(Time.time * speed * Mathf.Deg2Rad + unitVector.z * 1000)
+
+            + PercentOfLongitudinalMode / 100.0f * unitVector.x * amplitude * (Mathf.Cos(theta) * Mathf.Cos(phi) * Mathf.Sin(theta)) * Mathf.Cos(Time.time * speed * Mathf.Deg2Rad)
+            + PercentOfLongitudinalMode / 100.0f * unitVector.y * amplitude * (Mathf.Cos(theta) * Mathf.Sin(theta) * Mathf.Sin(phi)) * Mathf.Cos(Time.time * speed * Mathf.Deg2Rad)
+            + PercentOfLongitudinalMode / 100.0f * unitVector.z * amplitude * Mathf.Pow(Mathf.Cos(theta),2) * Mathf.Cos(Time.time * speed * Mathf.Deg2Rad);
+
+        return output;
+
+
+
+        /**
         //Vector for assigning relative locations of the spheres
         Vector3 unitVector = (pos - center);
 
@@ -184,6 +609,7 @@ public class GW_GravityScript : MonoBehaviour
             - PercentOfYMode / 100.0f * unitVector.y * amplitude * Mathf.Sin(Time.time * speed * Mathf.Deg2Rad + unitVector.x * 1000);
 
         return output;
+        **/
     }
 
 
@@ -208,8 +634,32 @@ public class GW_GravityScript : MonoBehaviour
         //Create normal vector of mesh; mesh is translated along this direction
         Vector3 unitVector = (pos - center).normalized;
 
+        Vector3 output;
 
+        float theta = angle1;
+        float phi = angle2;
+        float psi = angle3;
 
+        output.x = pos.x
+            + unitVector.x * amplitude * (-Mathf.Pow(Mathf.Cos(psi) * Mathf.Sin(phi) + Mathf.Cos(theta) * Mathf.Cos(phi) * Mathf.Sin(psi),2) + Mathf.Pow(Mathf.Cos(theta) * Mathf.Cos(phi) * Mathf.Cos(psi) - Mathf.Sin(phi) * Mathf.Sin(psi),2)) * Mathf.Cos(Time.time * speed * Mathf.Deg2Rad / Mathf.PI)
+            + unitVector.y * amplitude * (0.25f * (3f + Mathf.Cos(2 * theta)) * Mathf.Cos(2 * psi) * Mathf.Sin(2 * phi) + Mathf.Cos(theta) * Mathf.Cos(2 * phi) * Mathf.Sin(2 * psi)) * Mathf.Cos(Time.time * speed * Mathf.Deg2Rad / Mathf.PI)
+            + unitVector.z * amplitude * Mathf.Sin(theta) * (- Mathf.Cos(theta) * Mathf.Cos(phi) * Mathf.Cos(2 * psi) + Mathf.Sin(phi) * Mathf.Sin(2 * psi)) * Mathf.Cos(Time.time * speed * Mathf.Deg2Rad / Mathf.PI);
+
+        output.y = pos.y
+            + unitVector.x * amplitude * (0.25f * (3f + Mathf.Cos(2 * theta)) * Mathf.Cos(2 * psi) * Mathf.Sin(2 * phi) + Mathf.Cos(theta) * Mathf.Cos(2 * phi) * Mathf.Sin(2 * psi)) * Mathf.Cos(Time.time * speed * Mathf.Deg2Rad / Mathf.PI)
+            + unitVector.y * amplitude * (- Mathf.Pow(Mathf.Cos(phi),2) * Mathf.Cos(2 * psi) + Mathf.Cos(theta) * (Mathf.Cos(theta) * Mathf.Cos(2 * psi) * Mathf.Pow(Mathf.Sin(phi),2) + Mathf.Sin(2 * phi) * Mathf.Sin(2 * psi))) * Mathf.Cos(Time.time * speed * Mathf.Deg2Rad / Mathf.PI)
+            + unitVector.z * amplitude * (- Mathf.Sin(theta) * (Mathf.Cos(theta) * Mathf.Cos(2 * psi) * Mathf.Sin(phi) + Mathf.Cos(phi) * Mathf.Sin(2 * psi))) * Mathf.Cos(Time.time * speed * Mathf.Deg2Rad / Mathf.PI);
+
+        output.z = pos.z
+            + unitVector.x * amplitude * Mathf.Sin(theta) * (- Mathf.Cos(theta) * Mathf.Cos(phi) * Mathf.Cos(2 * psi) + Mathf.Sin(phi) * Mathf.Sin(2 * psi)) * Mathf.Cos(Time.time * speed * Mathf.Deg2Rad / Mathf.PI)
+            + unitVector.y * amplitude * (- Mathf.Sin(theta) * (Mathf.Cos(theta) * Mathf.Cos(2 * psi) * Mathf.Sin(phi) + Mathf.Cos(phi) * Mathf.Sin(2 * psi))) * Mathf.Cos(Time.time * speed * Mathf.Deg2Rad / Mathf.PI)
+            + unitVector.z * amplitude * (Mathf.Cos(2 * psi) * Mathf.Pow(Mathf.Sin(theta),2)) * Mathf.Cos(Time.time * speed * Mathf.Deg2Rad / Mathf.PI); 
+
+        return output;
+
+        /**
+
+        Vector3 unitVector = (pos - center).normalized;
         Vector3 output;
         output.x = pos.x
             + unitVector.x * amplitude * Mathf.Cos(Time.time * speed * Mathf.Deg2Rad / Mathf.PI);
@@ -218,6 +668,7 @@ public class GW_GravityScript : MonoBehaviour
         output.z = pos.z;
 
         return output;
+        **/
     }
 
     public Vector3 MoveCrossMode(Vector3 pos, Vector3 center, float angle)
@@ -233,7 +684,32 @@ public class GW_GravityScript : MonoBehaviour
         Vector3 unitVector = (pos - center).normalized;
         //Vector3 unitVector = new Vector3(-unitVectory.y, unitVectory.x, 0);
 
+        Vector3 output;
 
+        float theta = angle1;
+        float phi = angle2;
+        float psi = angle3;
+
+        output.x = pos.x
+            + unitVector.x * amplitude * (-2f * (Mathf.Cos(psi) * Mathf.Sin(phi) + Mathf.Cos(theta) * Mathf.Cos(phi) * Mathf.Sin(psi)) * (Mathf.Cos(theta) * Mathf.Cos(phi) * Mathf.Cos(psi) - Mathf.Sin(phi) * Mathf.Sin(psi))) * Mathf.Sin(Time.time * speed * Mathf.Deg2Rad / Mathf.PI)
+            + unitVector.y * amplitude * (Mathf.Cos(theta) * Mathf.Cos(2 * phi) * Mathf.Cos(2 * psi) - 2 * Mathf.Cos(phi) * Mathf.Cos(psi) * Mathf.Sin(phi) * Mathf.Sin(psi) - 2f * Mathf.Pow(Mathf.Cos(theta),2) * Mathf.Cos(phi) * Mathf.Cos(psi) * Mathf.Sin(phi) * Mathf.Sin(psi)) * Mathf.Sin(Time.time * speed * Mathf.Deg2Rad / Mathf.PI)
+            + unitVector.z * amplitude * (Mathf.Sin(theta)*(Mathf.Pow(Mathf.Cos(psi),2) * Mathf.Sin(phi) - Mathf.Sin(phi) * Mathf.Pow((Mathf.Sin(psi)),2) + Mathf.Cos(theta) * Mathf.Cos(phi) * Mathf.Sin(2*psi))) * Mathf.Sin(Time.time * speed * Mathf.Deg2Rad / Mathf.PI);
+
+        output.y = pos.y
+            + unitVector.x * amplitude * (Mathf.Cos(theta) * Mathf.Cos(2 * phi) * Mathf.Cos(2 * psi) - 2 * Mathf.Cos(phi) * Mathf.Cos(psi) * Mathf.Sin(phi) * Mathf.Sin(psi) - 2f * Mathf.Pow(Mathf.Cos(theta),2) * Mathf.Cos(phi) * Mathf.Cos(psi) * Mathf.Sin(phi) * Mathf.Sin(psi)) * Mathf.Sin(Time.time * speed * Mathf.Deg2Rad / Mathf.PI)
+            + unitVector.y * amplitude * (2f * (Mathf.Cos(theta) * Mathf.Cos(psi) * Mathf.Sin(phi) + Mathf.Cos(phi) * Mathf.Sin(psi)) * (Mathf.Cos(phi) * Mathf.Cos(psi) - Mathf.Cos(theta) * Mathf.Sin(phi) * Mathf.Sin(psi))) * Mathf.Sin(Time.time * speed * Mathf.Deg2Rad / Mathf.PI)
+            + unitVector.z * amplitude * (Mathf.Sin(theta) * (- Mathf.Cos(phi) * Mathf.Cos(2 * psi) + Mathf.Cos(theta) * Mathf.Sin(phi) * Mathf.Sin(2 * psi))) * Mathf.Sin(Time.time * speed * Mathf.Deg2Rad / Mathf.PI);
+
+        output.z = pos.z
+            + unitVector.x * amplitude * (Mathf.Sin(theta) * (Mathf.Pow(Mathf.Cos(psi),2) * Mathf.Sin(phi) - Mathf.Sin(phi) * Mathf.Pow(Mathf.Sin(psi),2) + Mathf.Cos(theta) * Mathf.Cos(phi) * Mathf.Sin(2 * psi))) * Mathf.Sin(Time.time * speed * Mathf.Deg2Rad / Mathf.PI) 
+            + unitVector.y * amplitude * (Mathf.Sin(theta) * (- Mathf.Cos(phi) * Mathf.Cos(2 * psi) + Mathf.Cos(theta) * Mathf.Sin(phi) * Mathf.Sin(2 * psi))) * Mathf.Sin(Time.time * speed * Mathf.Deg2Rad / Mathf.PI)
+            + unitVector.z * amplitude * (- 2f * Mathf.Cos(psi) * Mathf.Pow(Mathf.Sin(theta),2) * Mathf.Sin(psi)) * Mathf.Sin(Time.time * speed * Mathf.Deg2Rad / Mathf.PI);
+
+        return output;                
+
+
+        /**
+        Vector3 unitVector = (pos - center).normalized;
         Vector3 output;
         output.x = pos.x
         + unitVector.y * amplitude * Mathf.Sin(Time.time * speed * Mathf.Deg2Rad / Mathf.PI);
@@ -242,6 +718,7 @@ public class GW_GravityScript : MonoBehaviour
         output.z = pos.z;
 
         return output;
+        **/
     }
 
     public Vector3 MoveBreathingMode(Vector3 pos, Vector3 center, float angle)
@@ -256,7 +733,32 @@ public class GW_GravityScript : MonoBehaviour
         //Create normal vector of mesh; mesh is translated along this direction
         Vector3 unitVector = (pos - center).normalized;
 
+        Vector3 output;
 
+        float theta = angle1;
+        float phi = angle2;
+        float psi = angle3;
+
+        output.x = pos.x
+            + unitVector.x * amplitude * (Mathf.Pow(Mathf.Cos(theta),2) * Mathf.Pow(Mathf.Cos(phi),2) + Mathf.Pow(Mathf.Sin(phi),2)) * Mathf.Cos(Time.time * speed * Mathf.Deg2Rad / Mathf.PI)
+            + unitVector.y * amplitude * (- Mathf.Cos(phi) * Mathf.Pow(Mathf.Sin(theta),2) * Mathf.Sin(phi)) * Mathf.Cos(Time.time * speed * Mathf.Deg2Rad / Mathf.PI)
+            + unitVector.z * amplitude * (- Mathf.Cos(theta) * Mathf.Cos(phi) * Mathf.Sin(theta)) * Mathf.Cos(Time.time * speed * Mathf.Deg2Rad / Mathf.PI);
+
+        output.y = pos.y
+            + unitVector.x * amplitude * (- Mathf.Cos(phi) * Mathf.Pow(Mathf.Sin(theta),2) * Mathf.Sin(phi)) * Mathf.Cos(Time.time * speed * Mathf.Deg2Rad / Mathf.PI)
+            + unitVector.y * amplitude * (Mathf.Pow(Mathf.Cos(phi),2) + Mathf.Pow(Mathf.Cos(theta),2) * Mathf.Pow(Mathf.Sin(phi),2)) * Mathf.Cos(Time.time * speed * Mathf.Deg2Rad / Mathf.PI)
+            + unitVector.z * amplitude * (- Mathf.Cos(theta) * Mathf.Sin(theta) * Mathf.Sin(phi)) * Mathf.Cos(Time.time * speed * Mathf.Deg2Rad / Mathf.PI);
+
+        output.z = pos.z
+            + unitVector.x * amplitude * (- Mathf.Cos(theta) * Mathf.Cos(phi) * Mathf.Sin(theta)) * Mathf.Cos(Time.time * speed * Mathf.Deg2Rad / Mathf.PI)
+            + unitVector.y * amplitude * (- Mathf.Cos(theta) * Mathf.Sin(theta) * Mathf.Sin(phi)) * Mathf.Cos(Time.time * speed * Mathf.Deg2Rad / Mathf.PI) 
+            + unitVector.z * amplitude * Mathf.Pow(Mathf.Sin(theta),2) * Mathf.Cos(Time.time * speed * Mathf.Deg2Rad / Mathf.PI);
+
+        return output;
+
+
+        /**
+        Vector3 unitVector = (pos - center).normalized;
 
         Vector3 output;
         output.x = pos.x
@@ -266,6 +768,7 @@ public class GW_GravityScript : MonoBehaviour
         output.z = pos.z;
 
         return output;
+        **/
     }
 
     public Vector3 MoveLongitudinalMode(Vector3 pos, Vector3 center, float angle, float ampIndex)
@@ -278,7 +781,31 @@ public class GW_GravityScript : MonoBehaviour
         //Create normal vector of mesh; mesh is translated along this direction
         Vector3 unitVector = (pos - center).normalized;
 
+        Vector3 output;
 
+        float theta = angle1;
+        float phi = angle2;
+        float psi = angle3;
+
+        output.x = pos.x
+            + unitVector.x * amplitude * (Mathf.Pow(Mathf.Cos(phi),2) * Mathf.Pow(Mathf.Sin(theta),2)) * Mathf.Cos(Time.time * speed * Mathf.Deg2Rad / Mathf.PI + ampIndex)
+            + unitVector.y * amplitude * (Mathf.Cos(phi) * Mathf.Pow(Mathf.Sin(theta),2) * Mathf.Sin(phi)) * Mathf.Cos(Time.time * speed * Mathf.Deg2Rad) / Mathf.PI + ampIndex
+            + Vector3.forward.z * amplitude * (Mathf.Cos(theta) * Mathf.Cos(phi) * Mathf.Sin(theta)) * Mathf.Cos(Time.time * speed * Mathf.Deg2Rad / Mathf.PI + ampIndex);
+
+        output.y = pos.y
+            + unitVector.x * amplitude * (Mathf.Cos(phi) * Mathf.Pow(Mathf.Sin(theta),2) * Mathf.Sin(phi)) * Mathf.Cos(Time.time * speed * Mathf.Deg2Rad / Mathf.PI + ampIndex)
+            + unitVector.y * amplitude * (Mathf.Pow(Mathf.Sin(theta),2) * Mathf.Pow(Mathf.Sin(phi),2)) * Mathf.Cos(Time.time * speed * Mathf.Deg2Rad / Mathf.PI + ampIndex)
+            + Vector3.forward.z * amplitude * (Mathf.Cos(theta) * Mathf.Sin(theta) * Mathf.Sin(phi)) * Mathf.Cos(Time.time * speed * Mathf.Deg2Rad) / Mathf.PI + ampIndex;
+ 
+        output.z = pos.z
+            + unitVector.x * amplitude * (Mathf.Cos(theta) * Mathf.Cos(phi) * Mathf.Sin(theta)) * Mathf.Cos(Time.time * speed * Mathf.Deg2Rad / Mathf.PI + ampIndex)
+            + unitVector.y * amplitude * (Mathf.Cos(theta) * Mathf.Sin(theta) * Mathf.Sin(phi)) * Mathf.Cos(Time.time * speed * Mathf.Deg2Rad / Mathf.PI + ampIndex)
+            + Vector3.forward.z * amplitude * Mathf.Pow(Mathf.Cos(theta),2) * Mathf.Cos(Time.time * speed * Mathf.Deg2Rad / Mathf.PI + ampIndex);
+
+        return output;
+
+        /**
+        Vector3 unitVector = (pos - center).normalized;
 
         Vector3 output;
         output.x = pos.x;
@@ -288,6 +815,7 @@ public class GW_GravityScript : MonoBehaviour
             + Vector3.forward.z * amplitude * Mathf.Cos(Time.time * speed * Mathf.Deg2Rad / Mathf.PI + ampIndex);
 
         return output;
+        **/
     }
 
     public Vector3 MoveXMode(Vector3 pos, Vector3 center, float angle, float ampIndex)
@@ -302,7 +830,32 @@ public class GW_GravityScript : MonoBehaviour
         //Create normal vector of mesh; mesh is translated along this direction
         Vector3 unitVector = (pos - center).normalized;
 
+        Vector3 output;
 
+        float theta = angle1;
+        float phi = angle2;
+        float psi = angle3;
+
+        output.x = pos.x
+            + unitVector.x * amplitude * (2f * Mathf.Cos(phi) * Mathf.Sin(theta) * (Mathf.Cos(theta) * Mathf.Cos(phi) * Mathf.Cos(psi) - Mathf.Sin(phi) * Mathf.Sin(psi))) * Mathf.Cos(Time.time * speed * Mathf.Deg2Rad / Mathf.PI) 
+            + unitVector.y * amplitude * (Mathf.Sin(theta) * (Mathf.Cos(theta) * Mathf.Cos(psi) * Mathf.Sin(2 * phi) + Mathf.Cos(2 * phi) * Mathf.Sin(psi))) * Mathf.Cos(Time.time * speed * Mathf.Deg2Rad / Mathf.PI)
+            + Vector3.forward.z * Mathf.Cos(ampIndex) * amplitude * (Mathf.Pow(Mathf.Cos(theta),2) * Mathf.Cos(phi) * Mathf.Cos(psi) - Mathf.Cos(phi) * Mathf.Cos(psi) * Mathf.Pow(Mathf.Sin(theta),2) - Mathf.Cos(theta) * Mathf.Sin(phi) * Mathf.Sin(psi)) * Mathf.Cos(Time.time * speed * Mathf.Deg2Rad / Mathf.PI);
+
+        output.y = pos.y
+            + unitVector.x * amplitude * (Mathf.Sin(theta) * (Mathf.Cos(theta) * Mathf.Cos(psi) * Mathf.Sin(2 * phi) + Mathf.Cos(2 * phi) * Mathf.Sin(psi))) * Mathf.Cos(Time.time * speed * Mathf.Deg2Rad / Mathf.PI)
+            + unitVector.y * amplitude * (2f * Mathf.Sin(theta) * Mathf.Sin(phi) * (Mathf.Cos(theta) * Mathf.Cos(psi) * Mathf.Sin(phi) + Mathf.Cos(phi) * Mathf.Sin(psi))) * Mathf.Cos(Time.time * speed * Mathf.Deg2Rad / Mathf.PI)
+            + Vector3.forward.z * Mathf.Cos(ampIndex) * amplitude * (Mathf.Pow(Mathf.Cos(theta),2) * Mathf.Cos(psi) * Mathf.Sin(phi) - Mathf.Cos(psi) * Mathf.Pow(Mathf.Sin(theta),2) * Mathf.Sin(phi) + Mathf.Cos(theta) * Mathf.Cos(phi) * Mathf.Sin(psi)) * Mathf.Cos(Time.time * speed * Mathf.Deg2Rad / Mathf.PI);
+
+        output.z = pos.z
+            + unitVector.x * amplitude * (Mathf.Pow(Mathf.Cos(theta),2) * Mathf.Cos(phi) * Mathf.Cos(psi) - Mathf.Cos(phi) * Mathf.Cos(psi) * Mathf.Pow(Mathf.Sin(theta),2) - Mathf.Cos(theta) * Mathf.Sin(phi) * Mathf.Sin(psi)) * Mathf.Cos(Time.time * speed * Mathf.Deg2Rad / Mathf.PI)
+            + unitVector.y * amplitude * (Mathf.Pow(Mathf.Cos(theta),2) * Mathf.Cos(psi) * Mathf.Sin(phi) - Mathf.Cos(psi) * Mathf.Pow(Mathf.Sin(theta),2) * Mathf.Sin(phi) + Mathf.Cos(theta) * Mathf.Cos(phi) * Mathf.Sin(psi)) * Mathf.Cos(Time.time * speed * Mathf.Deg2Rad / Mathf.PI)
+            + Vector3.forward.z * Mathf.Cos(ampIndex) * amplitude * (- 2f * Mathf.Cos(theta) * Mathf.Cos(psi) * Mathf.Sin(theta)) * Mathf.Cos(Time.time * speed * Mathf.Deg2Rad / Mathf.PI);
+
+        return output;
+
+
+        /**
+        Vector3 unitVector = (pos - center).normalized;
 
         Vector3 output;
         output.x = pos.x
@@ -312,6 +865,7 @@ public class GW_GravityScript : MonoBehaviour
             + unitVector.x * amplitude * Mathf.Cos(Time.time * speed * Mathf.Deg2Rad / Mathf.PI);
 
         return output;
+        **/
     }
 
     public Vector3 MoveYMode(Vector3 pos, Vector3 center, float angle, float ampIndex)
@@ -327,6 +881,31 @@ public class GW_GravityScript : MonoBehaviour
         Vector3 unitVector = (pos - center).normalized;
 
 
+        Vector3 output;
+
+        float theta = angle1;
+        float phi = angle2;
+        float psi = angle3;
+
+        output.x = pos.x
+            + unitVector.x * amplitude * (- 2f * Mathf.Cos(phi) * Mathf.Sin(theta) * (Mathf.Cos(psi) * Mathf.Sin(phi) + Mathf.Cos(theta) * Mathf.Cos(phi) * Mathf.Sin(psi))) * Mathf.Cos(Time.time * speed * Mathf.Deg2Rad / Mathf.PI)
+            + unitVector.y * amplitude * (Mathf.Sin(theta) * (Mathf.Pow(Mathf.Cos(phi),2) * Mathf.Cos(psi) - Mathf.Cos(psi) * Mathf.Pow(Mathf.Sin(phi),2) - 2f * Mathf.Cos(theta) * Mathf.Cos(phi) * Mathf.Sin(phi) * Mathf.Sin(psi))) * Mathf.Cos(Time.time * speed * Mathf.Deg2Rad / Mathf.PI)
+            + Vector3.forward.z * Mathf.Cos(ampIndex) * amplitude * (- Mathf.Cos(theta) * Mathf.Cos(psi) * Mathf.Sin(phi) - Mathf.Pow(Mathf.Cos(theta),2) * Mathf.Cos(phi) * Mathf.Sin(psi) + Mathf.Cos(phi) * Mathf.Pow(Mathf.Sin(theta),2) * Mathf.Sin(psi)) * Mathf.Cos(Time.time * speed * Mathf.Deg2Rad / Mathf.PI);
+
+        output.y = pos.y
+            + unitVector.x * amplitude * (Mathf.Sin(theta) * (Mathf.Pow(Mathf.Cos(phi),2) * Mathf.Cos(psi) - Mathf.Cos(psi) * Mathf.Pow(Mathf.Sin(phi),2) - 2f * Mathf.Cos(theta) * Mathf.Cos(phi) * Mathf.Sin(phi) * Mathf.Sin(psi))) * Mathf.Cos(Time.time * speed * Mathf.Deg2Rad / Mathf.PI)
+            + unitVector.y * amplitude * (2f * Mathf.Sin(theta) * Mathf.Sin(phi) * (Mathf.Cos(phi) * Mathf.Cos(psi) - Mathf.Cos(theta) * Mathf.Sin(phi) * Mathf.Sin(psi))) * Mathf.Cos(Time.time * speed * Mathf.Deg2Rad / Mathf.PI)
+            + Vector3.forward.z * Mathf.Cos(ampIndex) * amplitude * (Mathf.Cos(theta) * Mathf.Cos(phi) * Mathf.Cos(psi) - Mathf.Pow(Mathf.Cos(theta),2) * Mathf.Sin(phi) * Mathf.Sin(psi) + Mathf.Pow(Mathf.Sin(theta),2) * Mathf.Sin(phi) * Mathf.Sin(psi)) * Mathf.Cos(Time.time * speed * Mathf.Deg2Rad / Mathf.PI);
+
+        output.z = pos.z
+            + unitVector.x * amplitude * (- Mathf.Cos(theta) * Mathf.Cos(psi) * Mathf.Sin(phi) - Mathf.Pow(Mathf.Cos(theta),2) * Mathf.Cos(phi) * Mathf.Sin(psi) + Mathf.Cos(phi) * Mathf.Pow(Mathf.Sin(theta),2) * Mathf.Sin(psi)) * Mathf.Cos(Time.time * speed * Mathf.Deg2Rad / Mathf.PI)
+            + unitVector.y * amplitude * (Mathf.Cos(theta) * Mathf.Cos(phi) * Mathf.Cos(psi) - Mathf.Pow(Mathf.Cos(theta),2) * Mathf.Sin(phi) * Mathf.Sin(psi) + Mathf.Pow(Mathf.Sin(theta),2) * Mathf.Sin(phi) * Mathf.Sin(psi)) * Mathf.Cos(Time.time * speed * Mathf.Deg2Rad / Mathf.PI)
+            + Vector3.forward.z * Mathf.Cos(ampIndex) * amplitude * (Mathf.Sin(2*theta)*Mathf.Sin(psi)) * Mathf.Cos(Time.time * speed * Mathf.Deg2Rad / Mathf.PI);
+
+        return output;
+
+        /**
+        Vector3 unitVector = (pos - center).normalized;
 
         Vector3 output;
         output.x = pos.x;
@@ -336,6 +915,7 @@ public class GW_GravityScript : MonoBehaviour
             + unitVector.y * amplitude * Mathf.Cos(Time.time * speed * Mathf.Deg2Rad / Mathf.PI);
 
         return output;
+        **/
     }
 
     /**
@@ -343,6 +923,9 @@ public class GW_GravityScript : MonoBehaviour
      * WITH PHASE DIFFERENCE
      * 
      * **/
+
+
+//Why are there no overload functions for the vector modes or the longitudinal mode?
 
     public Vector3 MovePlusMode(Vector3 pos, Vector3 center, float angle, float phase)
     {
@@ -355,6 +938,37 @@ public class GW_GravityScript : MonoBehaviour
          * **/
 
         //Create normal vector of mesh; mesh is translated along this direction
+
+        Vector3 unitVector = (pos - center).normalized;
+
+
+
+        Vector3 output;
+
+        float theta = angle1;
+        float phi = angle2;
+        float psi = angle3;
+
+        output.x = pos.x
+            + unitVector.x * amplitude * (-Mathf.Pow(Mathf.Cos(psi) * Mathf.Sin(phi) + Mathf.Cos(theta) * Mathf.Cos(phi) * Mathf.Sin(psi),2) + Mathf.Pow(Mathf.Cos(theta) * Mathf.Cos(phi) * Mathf.Cos(psi) - Mathf.Sin(phi) * Mathf.Sin(psi),2)) * Mathf.Cos(Time.time * speed * Mathf.Deg2Rad / Mathf.PI + phase)
+            + unitVector.y * amplitude * (0.25f * (3f + Mathf.Cos(2 * theta)) * Mathf.Cos(2 * psi) * Mathf.Sin(2 * phi) + Mathf.Cos(theta) * Mathf.Cos(2 * phi) * Mathf.Sin(2 * psi)) * Mathf.Cos(Time.time * speed * Mathf.Deg2Rad / Mathf.PI + phase)
+            + unitVector.z * amplitude * Mathf.Sin(theta) * (- Mathf.Cos(theta) * Mathf.Cos(phi) * Mathf.Cos(2 * psi) + Mathf.Sin(phi) * Mathf.Sin(2 * psi)) * Mathf.Cos(Time.time * speed * Mathf.Deg2Rad / Mathf.PI + phase);
+
+        output.y = pos.y
+            + unitVector.x * amplitude * (0.25f * (3f + Mathf.Cos(2 * theta)) * Mathf.Cos(2 * psi) * Mathf.Sin(2 * phi) + Mathf.Cos(theta) * Mathf.Cos(2 * phi) * Mathf.Sin(2 * psi)) * Mathf.Cos(Time.time * speed * Mathf.Deg2Rad / Mathf.PI + phase)
+            + unitVector.y * amplitude * (- Mathf.Pow(Mathf.Cos(phi),2) * Mathf.Cos(2 * psi) + Mathf.Cos(theta) * (Mathf.Cos(theta) * Mathf.Cos(2 * psi) * Mathf.Pow(Mathf.Sin(phi),2) + Mathf.Sin(2 * phi) * Mathf.Sin(2 * psi))) * Mathf.Cos(Time.time * speed * Mathf.Deg2Rad / Mathf.PI + phase)
+            + unitVector.z * amplitude * (- Mathf.Sin(theta) * (Mathf.Cos(theta) * Mathf.Cos(2 * psi) * Mathf.Sin(phi) + Mathf.Cos(phi) * Mathf.Sin(2 * psi))) * Mathf.Cos(Time.time * speed * Mathf.Deg2Rad / Mathf.PI + phase);
+
+        output.z = pos.z
+            + unitVector.x * amplitude * Mathf.Sin(theta) * (- Mathf.Cos(theta) * Mathf.Cos(phi) * Mathf.Cos(2 * psi) + Mathf.Sin(phi) * Mathf.Sin(2 * psi)) * Mathf.Cos(Time.time * speed * Mathf.Deg2Rad / Mathf.PI + phase)
+            + unitVector.y * amplitude * (- Mathf.Sin(theta) * (Mathf.Cos(theta) * Mathf.Cos(2 * psi) * Mathf.Sin(phi) + Mathf.Cos(phi) * Mathf.Sin(2 * psi))) * Mathf.Cos(Time.time * speed * Mathf.Deg2Rad / Mathf.PI + phase)
+            + unitVector.z * amplitude * (Mathf.Cos(2 * psi) * Mathf.Pow(Mathf.Sin(theta),2)) * Mathf.Cos(Time.time * speed * Mathf.Deg2Rad / Mathf.PI + phase); 
+
+        return output;
+
+
+
+        /**
         Vector3 unitVector = (pos - center).normalized;
 
 
@@ -367,6 +981,7 @@ public class GW_GravityScript : MonoBehaviour
         output.z = pos.z;
 
         return output;
+        **/
     }
 
     public Vector3 MoveCrossMode(Vector3 pos, Vector3 center, float angle, float phase)
@@ -380,6 +995,36 @@ public class GW_GravityScript : MonoBehaviour
          * **/
 
         //Create tangent vector of mesh; mesh is translated along this direction
+
+        Vector3 unitVectory = (pos - center).normalized;
+        Vector3 unitVector = new Vector3(-unitVectory.y, unitVectory.x, 0);
+
+
+        Vector3 output;
+
+        float theta = angle1;
+        float phi = angle2;
+        float psi = angle3;
+
+        output.x = pos.x
+            + unitVector.x * amplitude * (- 2f * (Mathf.Cos(psi) * Mathf.Sin(phi) + Mathf.Cos(theta) * Mathf.Cos(phi) * Mathf.Sin(psi)) * (Mathf.Cos(theta) * Mathf.Cos(phi) * Mathf.Cos(psi) - Mathf.Sin(phi) * Mathf.Sin(psi))) * Mathf.Sin(Time.time * speed * Mathf.Deg2Rad / Mathf.PI + phase) 
+            + unitVector.y * amplitude * (Mathf.Cos(theta) * Mathf.Cos(2 * phi) * Mathf.Cos(2 * psi) - 2 * Mathf.Cos(phi) * Mathf.Cos(psi) * Mathf.Sin(phi) * Mathf.Sin(psi) - 2f * Mathf.Pow(Mathf.Cos(theta),2) * Mathf.Cos(phi) * Mathf.Cos(psi) * Mathf.Sin(phi) * Mathf.Sin(psi)) * Mathf.Sin(Time.time * speed * Mathf.Deg2Rad / Mathf.PI + phase)
+            + unitVector.z * amplitude * (Mathf.Sin(theta) * (Mathf.Pow(Mathf.Cos(psi),2) * Mathf.Sin(phi) - Mathf.Sin(phi) * Mathf.Pow((Mathf.Sin(psi)),2) + Mathf.Cos(theta) * Mathf.Cos(phi) * Mathf.Sin(2*psi))) * Mathf.Sin(Time.time * speed * Mathf.Deg2Rad / Mathf.PI + phase);
+
+        output.y = pos.y
+            + unitVector.x * amplitude * (Mathf.Cos(theta) * Mathf.Cos(2 * phi) * Mathf.Cos(2 * psi) - 2f * Mathf.Cos(phi) * Mathf.Cos(psi) * Mathf.Sin(phi) * Mathf.Sin(psi) - 2f * Mathf.Pow(Mathf.Cos(theta),2) * Mathf.Cos(phi) * Mathf.Cos(psi) * Mathf.Sin(phi) * Mathf.Sin(psi)) * Mathf.Sin(Time.time * speed * Mathf.Deg2Rad / Mathf.PI + phase)
+            + unitVector.y * amplitude * (2f * (Mathf.Cos(theta) * Mathf.Cos(psi) * Mathf.Sin(phi) + Mathf.Cos(phi) * Mathf.Sin(psi)) * (Mathf.Cos(phi) * Mathf.Cos(psi) - Mathf.Cos(theta) * Mathf.Sin(phi) * Mathf.Sin(psi))) * Mathf.Sin(Time.time * speed * Mathf.Deg2Rad / Mathf.PI + phase)
+            + unitVector.z * amplitude * (Mathf.Sin(theta) * (- Mathf.Cos(phi) * Mathf.Cos(2 * psi) + Mathf.Cos(theta) * Mathf.Sin(phi) * Mathf.Sin(2 * psi))) * Mathf.Sin(Time.time * speed * Mathf.Deg2Rad / Mathf.PI + phase);
+
+        output.z = pos.z
+            + unitVector.x * amplitude * (Mathf.Sin(theta) * (Mathf.Pow(Mathf.Cos(psi),2) * Mathf.Sin(phi) - Mathf.Sin(phi) * Mathf.Pow(Mathf.Sin(psi),2) + Mathf.Cos(theta) * Mathf.Cos(phi) * Mathf.Sin(2 * psi))) * Mathf.Sin(Time.time * speed * Mathf.Deg2Rad / Mathf.PI + phase) 
+            + unitVector.y * amplitude * (Mathf.Sin(theta) * (- Mathf.Cos(phi) * Mathf.Cos(2 * psi) + Mathf.Cos(theta) * Mathf.Sin(phi) * Mathf.Sin(2 * psi))) * Mathf.Sin(Time.time * speed * Mathf.Deg2Rad / Mathf.PI + phase)
+            + unitVector.z * amplitude * (- 2f * Mathf.Cos(psi) * Mathf.Pow(Mathf.Sin(theta),2) * Mathf.Sin(psi)) * Mathf.Sin(Time.time * speed * Mathf.Deg2Rad / Mathf.PI + phase);
+
+        return output; 
+
+
+        /**
         Vector3 unitVectory = (pos - center).normalized;
         Vector3 unitVector = new Vector3(-unitVectory.y, unitVectory.x, 0);
 
@@ -392,6 +1037,7 @@ public class GW_GravityScript : MonoBehaviour
         output.z = pos.z;
 
         return output;
+        **/
     }
 
     public Vector3 MoveBreathingMode(Vector3 pos, Vector3 center, float angle, float phase)
@@ -404,6 +1050,36 @@ public class GW_GravityScript : MonoBehaviour
          * **/
 
         //Create normal vector of mesh; mesh is translated along this direction
+
+        Vector3 unitVector = (pos - center).normalized;
+
+
+
+        Vector3 output;
+
+        float theta = angle1;
+        float phi = angle2;
+        float psi = angle3;
+
+        output.x = pos.x
+            + unitVector.x * amplitude * (Mathf.Pow(Mathf.Cos(theta),2) * Mathf.Pow(Mathf.Cos(phi),2) + Mathf.Pow(Mathf.Sin(phi),2)) * Mathf.Cos(Time.time * speed * Mathf.Deg2Rad / Mathf.PI + phase)
+            + unitVector.y * amplitude * (- Mathf.Cos(phi) * Mathf.Pow(Mathf.Sin(theta),2) * Mathf.Sin(phi)) * Mathf.Cos(Time.time * speed * Mathf.Deg2Rad / Mathf.PI + phase)
+            + unitVector.z * amplitude * (- Mathf.Cos(theta) * Mathf.Cos(phi) * Mathf.Sin(theta)) * Mathf.Cos(Time.time * speed * Mathf.Deg2Rad / Mathf.PI + phase);
+
+        output.y = pos.y
+            + unitVector.x * amplitude * (- Mathf.Cos(phi) * Mathf.Pow(Mathf.Sin(theta),2) * Mathf.Sin(phi)) * Mathf.Cos(Time.time * speed * Mathf.Deg2Rad / Mathf.PI + phase)
+            + unitVector.y * amplitude * (Mathf.Pow(Mathf.Cos(phi),2) + Mathf.Pow(Mathf.Cos(theta),2) * Mathf.Pow(Mathf.Sin(phi),2)) * Mathf.Cos(Time.time * speed * Mathf.Deg2Rad / Mathf.PI + phase) 
+            + unitVector.z * amplitude * (- Mathf.Cos(theta) * Mathf.Sin(theta) * Mathf.Sin(phi)) * Mathf.Cos(Time.time * speed * Mathf.Deg2Rad / Mathf.PI + phase);
+
+        output.z = pos.z
+            + unitVector.x * amplitude * (- Mathf.Cos(theta) * Mathf.Cos(phi) * Mathf.Sin(theta)) * Mathf.Cos(Time.time * speed * Mathf.Deg2Rad / Mathf.PI + phase)
+            + unitVector.y * amplitude * (- Mathf.Cos(theta) * Mathf.Sin(theta) * Mathf.Sin(phi)) * Mathf.Cos(Time.time * speed * Mathf.Deg2Rad / Mathf.PI + phase) 
+            + unitVector.z * amplitude * Mathf.Pow(Mathf.Sin(theta),2) * Mathf.Cos(Time.time * speed * Mathf.Deg2Rad / Mathf.PI + phase);
+
+        return output;     
+
+
+        /**
         Vector3 unitVector = (pos - center).normalized;
 
 
@@ -416,6 +1092,7 @@ public class GW_GravityScript : MonoBehaviour
         output.z = pos.z;
 
         return output;
+        **/
     }
 
     float CalculateResponseFunction(int index, float theta, float phi, float psi)

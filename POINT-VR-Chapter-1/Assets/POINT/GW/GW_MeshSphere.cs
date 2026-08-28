@@ -57,6 +57,7 @@ public class GW_MeshSphere : MonoBehaviour
         
     }
 
+
     void FixedUpdate()
     {
         /**Thread t = new Thread(() => DisplaceVertices());
